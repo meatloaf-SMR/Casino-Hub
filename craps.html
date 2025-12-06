@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Craps Table</title>
+
+<style>
+  body {
+    background: #0b1924;
+    font-family: system-ui, sans-serif;
+    color: #fff;
+    text-align: center;
+    padding: 20px;
+  }
+
+  h1 {
+    margin-bottom: 20px;
+    font-size: 42px;
+    letter-spacing: 3px;
+  }
+
+  /* ✅ Table Layout */
+  .table {
+    width: 900px;
+    margin: 0 auto;
+    background: #0a5a2c;
+    border: 6px solid #d4d4d4;
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 0 25px rgba(0,0,0,0.6);
+    position: relative;
+  }
+
+  /* ✅ Pass Line */
+  .pass-line {
+    border: 3px solid #fff;
+    padding: 15px;
+    margin-top: 20px;
+    border-radius: 12px;
+    font-size: 26px;
+    font-weight: bold;
+  }
+
+  /* ✅ Field Area */
+  .field {
+    border: 3px solid #fff;
+    padding: 20px;
+    margin-top: 25px;
+    border-radius: 12px;
+    font-size: 22px;
+  }
+
+  /* ✅ Point Indicator */
+  .point-box {
+    margin-top: 25px;
+    font-size: 28px;
+    font-weight: bold;
+  }
+
+  /* ✅ Dice */
+  .dice-area {
+    margin-top: 30px;
+  }
+
+  .die {
+    display: inline-block;
+    width: 90px;
+    height: 90px;
+    background: #fff;
+    color: #000;
+    border-radius: 12px;
+    margin: 10px;
+    font-size: 60px;
+    line-height: 90px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  }
+
+  /* ✅ Roll Button */
+  button {
+    margin-top: 25px;
+    padding: 15px 40px;
+    font-size: 22px;
+    border: none;
+    border-radius: 10px;
+    background: #f9d675;
+    color: #111;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #8a6220;
+    transition: 0.1s;
+  }
+
+  button:hover {
+    filter: brightness(1.05);
+  }
+
+  button:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #8a6220;
+  }
+
+  /* ✅ Status Text */
+  #status {
+    margin-top: 25px;
+    font-size: 26px;
+    font-weight: bold;
+  }
+</style>
+</head>
+
+<body>
+
+<h1>Craps</h1>
+
+<div class="table">
+
+  <div class="field">FIELD: 2 • 3 • 4 • 9 • 10 • 11 • 12</div>
+
+  <div class="pass-line">PASS LINE</div>
+
+  <div class="point-box" id="pointBox">Point: —</div>
+
+  <div class="dice-area">
+    <div id="die1" class="die">⚀</div>
+    <div id="die2" class="die">⚀</div>
+  </div>
+
+  <button onclick="rollDice()">ROLL</button>
+
+  <div id="status">Click ROLL to begin</div>
+
+</div>
+
+<script>
+let point = null;
+
+function rollDice() {
+  const d1 = Math.floor(Math.random() * 6) + 1;
+  const d2 = Math.floor(Math.random() * 6) + 1;
+  const total = d1 + d2;
+
+  document.getElementById("die1").textContent = getFace(d1);
+  document.getElementById("die2").textContent = getFace(d2);
+
+  if (point === null) {
+    comeOut(total);
+  } else {
+    pointPhase(total);
+  }
+}
+
+function getFace(n) {
+  return ["⚀","⚁","⚂","⚃","⚄","⚅"][n-1];
+}
+
+function comeOut(total) {
+  if (total === 7 || total === 11) {
+    setStatus("Natural! You WIN!");
+  } else if (total === 2 || total === 3 || total === 12) {
+    setStatus("Craps! You LOSE!");
+  } else {
+    point = total;
+    document.getElementById("pointBox").textContent = "Point: " + point;
+    setStatus("Point is set. Roll again.");
+  }
+}
+
+function pointPhase(total) {
+  if (total === point) {
+    setStatus("You hit the point! WIN!");
+    resetPoint();
+  } else if (total === 7) {
+    setStatus("Seven out! You LOSE!");
+    resetPoint();
+  } else {
+    setStatus("You rolled " + total + ". Keep rolling.");
+  }
+}
+
+function resetPoint() {
+  point = null;
+  document.getElementById("pointBox").textContent = "Point: —";
+}
+
+function setStatus(msg) {
+  document.getElementById("status").textContent = msg;
+}
+</script>
+
+</body>
+</html>
