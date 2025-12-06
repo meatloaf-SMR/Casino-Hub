@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>5‑Card Draw Poker</title>
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  body {
+    background: radial-gradient(circle at top, #0b1924 0, #02070b 60%, #000 100%);
+    color: #f4f4f4;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 30px;
+  }
+
+  /* NEW: Layout wrapper */
+  .layout {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    max-width: 1200px;
+  }
+
+  /* Poker Table */
+  .table {
+    flex: 1;
+    background: radial-gradient(circle at center, #0f5b24 0, #064018 55%, #02200b 100%);
+    border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75);
+    padding: 20px 20px 26px;
+    border: 4px solid #c4a15a;
+    position: relative;
+  }
+
+  .table::before {
+    content: "POKER";
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(250, 245, 210, 0.2);
+    font-size: 28px;
+    letter-spacing: 8px;
+    font-weight: 700;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+
+  .bankroll span {
+    font-weight: 700;
+    color: #f7e9a0;
+  }
+
+  .bet-area input {
+    width: 80px;
+    margin-left: 6px;
+    padding: 3px 6px;
+    border-radius: 5px;
+    border: 1px solid #c4a15a;
+    background: rgba(0, 0, 0, 0.4);
+    color: #f7f7f7;
+  }
+
+  .center-info {
+    font-size: 13px;
+    text-align: center;
+    opacity: 0.9;
+  }
+
+  .hands {
+    margin-top: 8px;
+  }
+
+  .hand {
+    margin: 12px 0 18px;
+    padding: 10px 10px 12px;
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.08);
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.06), transparent 60%);
+    position: relative;
+  }
+
+  .hand-label {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.85;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .hand-label span.value {
+    font-weight: 700;
+    font-size: 15px;
+    color: #f7e9a0;
+  }
+
+  .cards {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .card {
+    width: 80px;
+    height: 110px;
+    border-radius: 8px;
+    background: linear-gradient(145deg, #ffffff, #f0f0f0);
+    border: 1px solid #ccc;
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.35);
+    position: relative;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: default;
+  }
+
+  .card.red { color: #d01212; }
+  .card.black { color: #111; }
+
+  .card-rank-top {
+    font-size: 16px;
+    font-weight: 700;
+    align-self: flex-start;
+  }
+
+  .card-suit-center {
+    font-size: 26px;
+    text-align: center;
+  }
+
+  .card-rank-bottom {
+    font-size: 16px;
+    font-weight: 700;
+    transform: rotate(180deg);
+    align-self: flex-end;
+  }
+
+  .card.player-card {
+    cursor: pointer;
+  }
+
+  .card.selected::after {
+    content: "HOLD";
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    font-weight: 700;
+    color: #ffffff;
+    background: rgba(0,0,0,0.65);
+    padding: 2px 6px;
+    border-radius: 999px;
+  }
+
+  .controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+
+  .btn {
+    min-width: 90px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: none;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    color: #111;
+    background: radial-gradient(circle at top, #f9d675, #d8a73e);
+    box-shadow: 0 4px 0 #8a6220, 0 0 14px rgba(0, 0, 0, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: transform 0.06s ease, box-shadow 0.06s ease, filter 0.15s ease;
+  }
+
+  .btn.secondary {
+    background: radial-gradient(circle at top, #e7e7e7, #bfc2c6);
+    box-shadow: 0 4px 0 #555b63, 0 0 14px rgba(0, 0, 0, 0.6);
+  }
+
+  .btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  .btn:hover:not(:disabled) {
+    filter: brightness(1.04);
+  }
+
+  .btn:active:not(:disabled) {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #8a6220, 0 0 10px rgba(0, 0, 0, 0.6);
+  }
+
+  .message {
+    text-align: center;
+    margin-top: 14px;
+    min-height: 22px;
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.4px;
+  }
+
+  .message.win { color: #ffe66d; }
+  .message.lose { color: #ff9b9b; }
+  .message.push { color: #c4e9ff; }
+
+  footer {
+    text-align: center;
+    font-size: 11px;
+    opacity: 0.7;
+    margin-top: 10px;
+  }
+
+  /* ✅ NEW: Hand Ranking Guide */
+  .hand-guide {
+    width: 260px;
+    background: #0f2a38;
+    border-radius: 16px;
+    padding: 20px;
+    border: 2px solid rgba(255,255,255,0.1);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+    height: fit-content;
+  }
+
+  .hand-guide h3 {
+    font-size: 22px;
+    margin-bottom: 12px;
+    color: #ffe887;
+    text-align: center;
+  }
+
+  .hand-guide ul {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  .hand-guide li {
+    margin-bottom: 12px;
+    font-size: 14px;
+    line-height: 1.4;
+    opacity: 0.9;
+  }
+
+  @media (max-width: 900px) {
+    .layout {
+      flex-direction: column;
+      align-items: center;
+    }
+    .hand-guide {
+      width: 100%;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ✅ Poker Table -->
+  <div class="table">
+    <header>
+      <div class="bankroll">Bankroll: <span id="bankroll">$1000</span></div>
+
+      <div class="center-info">
+        5‑card draw: Deal, choose cards to hold, then Draw for showdown.
+      </div>
+
+      <div class="bet-area">
+        <label for="bet">Bet:</label>
+        <input type="number" id="bet" value="50" min="10" step="10" />
+      </div>
+    </header>
+
+    <div class="hands">
+      <div class="hand" id="dealer-hand">
+        <div class="hand-label">
+          <span>Dealer</span>
+          <span class="value" id="dealer-rank"></span>
+        </div>
+        <div class="cards" id="dealer-cards"></div>
+      </div>
+
+      <div class="hand" id="player-hand">
+        <div class="hand-label">
+          <span>Player</span>
+          <span class="value" id="player-rank"></span>
+        </div>
+        <div class="cards" id="player-cards"></div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn secondary" id="deal-btn">Deal</button>
+      <button class="btn" id="draw-btn" disabled>Draw</button>
+      <button class="btn secondary" id="reset-btn">Reset Bankroll</button>
+    </div>
+
+    <div class="message" id="message"></div>
+
+    <footer>Hand rankings from high card up to royal flush.</footer>
+  </div>
+
+  <!-- ✅ NEW: Hand Ranking Guide -->
+  <div class="hand-guide">
+    <h3>Poker Hand Rankings</h3>
+    <ul>
+      <li><strong>Royal Flush</strong> – A,K,Q,J,10 same suit</li>
+      <li><strong>Straight Flush</strong> – Five in a row, same suit</li>
+      <li><strong>Four of a Kind</strong> – Four cards same rank</li>
+      <li><strong>Full House</strong> – Three of a kind + a pair</li>
+      <li><strong>Flush</strong> – Five cards same suit</li>
+      <li><strong>Straight</strong> – Five in a row</li>
+      <li><strong>Three of a Kind</strong> – Three cards same rank</li>
+      <li><strong>Two Pair</strong> – Two different pairs</li>
+      <li><strong>One Pair</strong> – Two cards same rank</li>
+      <li><strong>High Card</strong> – Highest card wins</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+/* ✅ Your entire poker logic stays the same — unchanged */
+/* ✅ Full Poker Logic (unchanged from your original version) */
+
+const SUITS = ["♠", "♥", "♦", "♣"];
+const RANKS = ["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
+
+let deck = [];
+let playerHand = [];
+let dealerHand = [];
+let bankroll = 1000;
+let currentBet = 50;
+let phase = "idle";
+
+const bankrollSpan = document.getElementById("bankroll");
+const betInput = document.getElementById("bet");
+const dealerCardsDiv = document.getElementById("dealer-cards");
+const playerCardsDiv = document.getElementById("player-cards");
+const dealerRankSpan = document.getElementById("dealer-rank");
+const playerRankSpan = document.getElementById("player-rank");
+const messageDiv = document.getElementById("message");
+
+const dealBtn = document.getElementById("deal-btn");
+const drawBtn = document.getElementById("draw-btn");
+const resetBtn = document.getElementById("reset-btn");
+
+function createDeck() {
+  const d = [];
+  for (const suit of SUITS) {
+    for (const rank of RANKS) {
+      d.push({ suit, rank });
+    }
+  }
+  for (let i=d.length-1;i>0;i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [d[i],d[j]]=[d[j],d[i]];
+  }
+  return d;
+}
+
+function drawCard() {
+  if (deck.length === 0) deck = createDeck();
+  return deck.pop();
+}
+
+function createCardElement(card, isPlayer, index) {
+  const div = document.createElement("div");
+  const isRed = card.suit === "♥" || card.suit === "♦";
+  div.className = "card " + (isRed?"red":"black");
+  if (isPlayer) {
+    div.classList.add("player-card");
+    div.dataset.index = index;
+    div.addEventListener("click", toggleHold);
+  }
+
+  const top = document.createElement("div");
+  top.className = "card-rank-top";
+  top.textContent = card.rank + card.suit;
+
+  const center = document.createElement("div");
+  center.className = "card-suit-center";
+  center.textContent = card.suit;
+
+  const bottom = document.createElement("div");
+  bottom.className = "card-rank-bottom";
+  bottom.textContent = card.rank + card.suit;
+
+  div.appendChild(top);
+  div.appendChild(center);
+  div.appendChild(bottom);
+
+  return div;
+}
+
+function renderHands(showDealer=false) {
+  dealerCardsDiv.innerHTML = "";
+  playerCardsDiv.innerHTML = "";
+  dealerRankSpan.textContent = "";
+  playerRankSpan.textContent = "";
+
+  dealerHand.forEach((card, i) => {
+    if (!showDealer) {
+      const back = document.createElement("div");
+      back.className = "card";
+      back.style.background = "linear-gradient(135deg, #143d6b, #01152b)";
+      back.style.color = "#fff";
+      dealerCardsDiv.appendChild(back);
+    } else {
+      dealerCardsDiv.appendChild(createCardElement(card, false, i));
+    }
+  });
+
+  playerHand.forEach((card, i) => {
+    playerCardsDiv.appendChild(createCardElement(card, true, i));
+  });
+}
+
+function updateBankrollDisplay() {
+  bankrollSpan.textContent = "$" + bankroll;
+}
+
+function setMessage(text, type) {
+  messageDiv.className = "message";
+  if (type === "win") messageDiv.classList.add("win");
+  if (type === "lose") messageDiv.classList.add("lose");
+  if (type === "push") messageDiv.classList.add("push");
+  messageDiv.textContent = text;
+}
+
+function handRankValue(rank) {
+  return RANKS.indexOf(rank);
+}
+
+function evaluateHand(hand) {
+  const counts = {};
+  const suits = {};
+  const values = [];
+  for (const card of hand) {
+    const v = handRankValue(card.rank);
+    values.push(v);
+    counts[v] = (counts[v] || 0) + 1;
+    suits[card.suit] = (suits[card.suit] || 0) + 1;
+  }
+  values.sort((a,b)=>a-b);
+
+  const isFlush = Object.values(suits).some(c => c === 5);
+  let isStraight = false;
+  let straightHigh = values[4];
+  if (values[0]+1===values[1] && values[1]+1===values[2] && values[2]+1===values[3] && values[3]+1===values[4]) {
+    isStraight = true;
+  }
+  if (JSON.stringify(values) === JSON.stringify([0,1,2,3,12])) {
+    isStraight = true;
+    straightHigh = 3;
+  }
+
+  const countValues = Object.values(counts).sort((a,b)=>b-a);
+  const valueCountPairs = Object.entries(counts).map(([v,c]) => ({v:parseInt(v,10), c}));
+  valueCountPairs.sort((a,b)=>{
+    if (b.c !== a.c) return b.c - a.c;
+    return b.v - a.v;
+  });
+
+  const isRoyal = isStraight && isFlush && straightHigh === handRankValue("A");
+
+  if (isRoyal) {
+    return { rank:9, name:"Royal Flush", tiebreak:[straightHigh] };
+  }
+  if (isStraight && isFlush) {
+    return { rank:8, name:"Straight Flush", tiebreak:[straightHigh] };
+  }
+  if (countValues[0] === 4) {
+    const fourVal = valueCountPairs[0].v;
+    const kicker = valueCountPairs[1].v;
+    return { rank:7, name:"Four of a Kind", tiebreak:[fourVal, kicker] };
+  }
+  if (countValues[0] === 3 && countValues[1] === 2) {
+    const threeVal = valueCountPairs[0].v;
+    const pairVal = valueCountPairs[1].v;
+    return { rank:6, name:"Full House", tiebreak:[threeVal, pairVal] };
+  }
+  if (isFlush) {
+    return { rank:5, name:"Flush", tiebreak:values.slice().reverse() };
+  }
+  if (isStraight) {
+    return { rank:4, name:"Straight", tiebreak:[straightHigh] };
+  }
+  if (countValues[0] === 3) {
+    const threeVal = valueCountPairs[0].v;
+    const kickers = valueCountPairs.slice(1).map(x=>x.v).sort((a,b)=>b-a);
+    return { rank:3, name:"Three of a Kind", tiebreak:[threeVal, ...kickers] };
+  }
+  if (countValues[0] === 2 && countValues[1] === 2) {
+    const pair1 = valueCountPairs[0].v;
+    const pair2 = valueCountPairs[1].v;
+    const kicker = valueCountPairs[2].v;
+    const highPair = Math.max(pair1, pair2);
+    const lowPair = Math.min(pair1, pair2);
+    return { rank:2, name:"Two Pair", tiebreak:[highPair, lowPair, kicker] };
+  }
+  if (countValues[0] === 2) {
+    const pairVal = valueCountPairs[0].v;
+    const kickers = valueCountPairs.slice(1).map(x=>x.v).sort((a,b)=>b-a);
+    return { rank:1, name:"One Pair", tiebreak:[pairVal, ...kickers] };
+  }
+  return { rank:0, name:"High Card", tiebreak:values.slice().reverse() };
+}
+
+function compareHands(playerEval, dealerEval) {
+  if (playerEval.rank > dealerEval.rank) return 1;
+  if (playerEval.rank < dealerEval.rank) return -1;
+  const len = Math.max(playerEval.tiebreak.length, dealerEval.tiebreak.length);
+  for (let i=0;i<len;i++) {
+    const pv = playerEval.tiebreak[i] || 0;
+    const dv = dealerEval.tiebreak[i] || 0;
+    if (pv > dv) return 1;
+    if (pv < dv) return -1;
+  }
+  return -1;
+}
+
+function resetHands() {
+  playerHand = [];
+  dealerHand = [];
+  dealerRankSpan.textContent = "";
+  playerRankSpan.textContent = "";
+  messageDiv.textContent = "";
+  dealerCardsDiv.innerHTML = "";
+  playerCardsDiv.innerHTML = "";
+}
+
+function startDeal() {
+  const betVal = parseInt(betInput.value, 10);
+  if (isNaN(betVal) || betVal < 10) {
+    setMessage("Minimum bet is $10.", "lose");
+    return;
+  }
+  if (betVal > bankroll) {
+    setMessage("You cannot bet more than your bankroll.", "lose");
+    return;
+  }
+  currentBet = betVal;
+  bankroll -= currentBet;
+  updateBankrollDisplay();
+
+  phase = "deal";
+  resetHands();
+  deck = createDeck();
+
+  for (let i=0;i<5;i++) {
+    playerHand.push(drawCard());
+    dealerHand.push(drawCard());
+  }
+
+  renderHands(false);
+  setMessage("Select cards to hold, then press Draw.");
+  dealBtn.disabled = true;
+  drawBtn.disabled = false;
+  betInput.disabled = true;
+}
+
+function toggleHold(e) {
+  if (phase !== "deal") return;
+  const cardDiv = e.currentTarget;
+  cardDiv.classList.toggle("selected");
+}
+
+function drawPhase() {
+  if (phase !== "deal") return;
+  phase = "showdown";
+
+  const selectedIndexes = new Set(
+    Array.from(document.querySelectorAll(".player-card.selected")).map(el => parseInt(el.dataset.index,10))
+  );
+  for (let i=0;i<5;i++) {
+    if (!selectedIndexes.has(i)) {
+      playerHand[i] = drawCard();
+    }
+  }
+
+  const dealerEval = evaluateHand(dealerHand);
+  let toReplace = [];
+  const counts = {};
+  dealerHand.forEach(card => {
+    const v = handRankValue(card.rank);
+    counts[v] = (counts[v] || 0) + 1;
+  });
+  const pairs = Object.entries(counts).filter(([,c])=>c>=2).map(([v])=>parseInt(v,10));
+
+  if (pairs.length === 0) {
+    const sorted = dealerHand.map((card, idx)=>({idx, v:handRankValue(card.rank)}))
+      .sort((a,b)=>a.v-b.v);
+    toReplace = sorted.slice(0,3).map(o=>o.idx);
+  } else {
+    dealerHand.forEach((card, idx) => {
+      const v = handRankValue(card.rank);
+      if (!pairs.includes(v)) toReplace.push(idx);
+    });
+  }
+
+  toReplace.forEach(idx => {
+    dealerHand[idx] = drawCard();
+  });
+
+  renderHands(true);
+
+  const pEval = evaluateHand(playerHand);
+  const dEval = evaluateHand(dealerHand);
+  playerRankSpan.textContent = pEval.name;
+  dealerRankSpan.textContent = dEval.name;
+
+  const cmp = compareHands(pEval, dEval);
+  if (cmp > 0) {
+    const payout = currentBet * 2;
+    bankroll += payout;
+    updateBankrollDisplay();
+    setMessage("You win with " + pEval.name + "!", "win");
+  } else if (cmp < 0) {
+    setMessage("Dealer wins with " + dEval.name + ".", "lose");
+  }
+
+  dealBtn.disabled = bankroll < 10;
+  drawBtn.disabled = true;
+  betInput.disabled = false;
+}
+
+function resetBankroll() {
+  bankroll = 1000;
+  updateBankrollDisplay();
+  setMessage("Bankroll reset to $1000.");
+  if (phase !== "deal") {
+    dealBtn.disabled = false;
+  }
+}
+
+dealBtn.addEventListener("click", startDeal);
+drawBtn.addEventListener("click", drawPhase);
+resetBtn.addEventListener("click", resetBankroll);
+
+updateBankrollDisplay();
+renderHands(false);
+setMessage("Set your bet and press Deal.");
+</script>
+</body>
+</html>

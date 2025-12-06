@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Casino Game Hub</title>
+
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, sans-serif;
+  }
+
+  body {
+    background: radial-gradient(circle at top, #0b1924, #02070b 70%);
+    color: #f4f4f4;
+    padding: 30px;
+    min-height: 100vh;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 48px;
+    letter-spacing: 4px;
+    margin-bottom: 30px;
+  }
+
+  /* ✅ Responsive grid that prevents T-shaped layouts */
+  .games {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 25px;
+    padding: 10px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .card {
+    background: #0f2a38;
+    border: 3px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+  }
+
+  .card h2 {
+    margin-bottom: 10px;
+    font-size: 26px;
+  }
+
+  .card p {
+    margin-bottom: 15px;
+    opacity: 0.85;
+  }
+
+  .btn {
+    padding: 10px 20px;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    margin: 5px 0;
+    width: 100%;
+    background: radial-gradient(circle at top, #f9d675, #d8a73e);
+    color: #111;
+    box-shadow: 0 4px 0 #8a6220;
+    transition: 0.1s;
+  }
+
+  .btn:hover {
+    filter: brightness(1.05);
+  }
+
+  .btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #8a6220;
+  }
+
+  /* ✅ Ensures iframe is visible and loads games */
+  #gameFrame {
+    width: 100%;
+    height: 700px;
+    border: none;
+    margin-top: 40px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    display: block;
+  }
+</style>
+
+</head>
+<body>
+
+<h1>Casino Game Hub</h1>
+
+<div class="games">
+
+  <div class="card">
+    <h2>Blackjack</h2>
+    <p>Beat the dealer to 21.</p>
+    <button class="btn" onclick="openGame('blackjack.html')">Play</button>
+  </div>
+
+  <div class="card">
+    <h2>Roulette</h2>
+    <p>Bet on red, black, or numbers.</p>
+    <button class="btn" onclick="openGame('roulette.html')">Play</button>
+  </div>
+
+  <div class="card">
+    <h2>Poker</h2>
+    <p>Classic Texas Hold'em.</p>
+    <button class="btn" onclick="openGame('poker.html')">Play</button>
+  </div>
+
+  <div class="card">
+    <h2>Pool</h2>
+    <p>8‑ball billiards physics.</p>
+    <button class="btn" onclick="openGame('pool.html')">Play</button>
+  </div>
+
+  <div class="card">
+    <h2>Air Hockey</h2>
+    <p>1P/2P fast arcade action.</p>
+    <button class="btn" onclick="openGame('air_hockey.html')">Play</button>
+  </div>
+
+  <div class="card">
+    <h2>Slot Machine</h2>
+    <p>Classic 3‑reel fruit machine.</p>
+    <button class="btn" onclick="openGame('slot_machine.html')">Play</button>
+  </div>
+
+  <div class="card">
+    <h2>Tutorial</h2>
+    <p>Learn how to play.</p>
+    <button class="btn" onclick="openGame('tutorial.html')">Play</button>
+  </div>
+
+</div>
+
+<!-- ✅ The iframe MUST exist before the script runs -->
+<iframe id="gameFrame"></iframe>
+
+<script>
+  function openGame(file) {
+    const frame = document.getElementById("gameFrame");
+    frame.src = file;
+
+    // ✅ Smooth scroll AFTER the iframe loads
+    setTimeout(() => {
+      frame.scrollIntoView({ behavior: "smooth" });
+    }, 150);
+  }
+</script>
+
+</body>
+</html>
