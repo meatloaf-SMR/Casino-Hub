@@ -387,4 +387,27 @@
       document.getElementById("casinoContent").style.display = "none";
       document.getElementById("calculatorScreen").style.display = "block";
       history.pushState({}, "", "/calculator");
+    }
+  });
 
+  /* ✅ Calculator Logic */
+  function pressCalc(val) {
+    document.getElementById("calcDisplay").value += val;
+  }
+
+  function clearCalc() {
+    document.getElementById("calcDisplay").value = "";
+  }
+
+  function calculate() {
+    try {
+      const result = eval(document.getElementById("calcDisplay").value);
+      document.getElementById("calcDisplay").value = result;
+    } catch {
+      document.getElementById("calcDisplay").value = "Error";
+    }
+  }
+</script>
+
+</body>
+</html>
