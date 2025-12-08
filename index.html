@@ -341,6 +341,22 @@
     await incrementSiteOpens();
   }
 </script>
-
+ 
+<script>
+  // ✅ Force a Firestore write to confirm connection
+  db.collection("firstWriteTest").add({
+    message: "Hello Firestore!",
+    time: Date.now()
+  })
+  .then(() => {
+    document.getElementById("connectionBanner").style.background = "#7CFC00";
+    document.getElementById("connectionBanner").textContent = "✅ Connected to Firebase (Write Successful)";
+  })
+  .catch(() => {
+    document.getElementById("connectionBanner").style.background = "#ff6b6b";
+    document.getElementById("connectionBanner").textContent = "❌ Not Connected (Write Failed)";
+  });
+</script>
 </body>
 </html>
+
