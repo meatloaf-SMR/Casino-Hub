@@ -314,11 +314,16 @@
     document.getElementById("startupOverlay").style.display = "none";
   }
 
-  /* ✅ Panic Key (Esc) */
+  /* ✅ Panic Key (Esc) + URL Change */
   document.addEventListener("keydown", function(e) {
     if (e.key === "Escape") {
+
+      // Hide casino, show calculator
       document.getElementById("casinoContent").style.display = "none";
       document.getElementById("calculatorScreen").style.display = "block";
+
+      // Change URL to harmless path
+      history.pushState({}, "", "/calculator");
     }
   });
 
