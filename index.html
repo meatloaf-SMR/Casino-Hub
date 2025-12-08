@@ -19,6 +19,21 @@
     min-height: 100vh;
   }
 
+  /* ✅ Update Bar */
+  #updateBar {
+    width: 100%;
+    background: #ffffff;
+    color: #222;
+    padding: 12px 20px;
+    font-size: 18px;
+    text-align: center;
+    border-bottom: 1px solid #ccc;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 9998;
+  }
+
   h1 {
     text-align: center;
     font-size: 48px;
@@ -175,6 +190,9 @@
 </head>
 <body>
 
+<!-- ✅ Update Bar -->
+<div id="updateBar">Loading latest update…</div>
+
 <!-- ✅ Calculator Panic Screen -->
 <div id="calculatorScreen">
   <div id="calcBox">
@@ -182,169 +200,4 @@
     <div>
       <button class="calcBtn" onclick="pressCalc('7')">7</button>
       <button class="calcBtn" onclick="pressCalc('8')">8</button>
-      <button class="calcBtn" onclick="pressCalc('9')">9</button>
-      <button class="calcBtn" onclick="pressCalc('/')">÷</button>
-
-      <button class="calcBtn" onclick="pressCalc('4')">4</button>
-      <button class="calcBtn" onclick="pressCalc('5')">5</button>
-      <button class="calcBtn" onclick="pressCalc('6')">6</button>
-      <button class="calcBtn" onclick="pressCalc('*')">×</button>
-
-      <button class="calcBtn" onclick="pressCalc('1')">1</button>
-      <button class="calcBtn" onclick="pressCalc('2')">2</button>
-      <button class="calcBtn" onclick="pressCalc('3')">3</button>
-      <button class="calcBtn" onclick="pressCalc('-')">−</button>
-
-      <button class="calcBtn" onclick="pressCalc('0')">0</button>
-      <button class="calcBtn" onclick="pressCalc('.')">.</button>
-      <button class="calcBtn" onclick="calculate()">=</button>
-      <button class="calcBtn" onclick="pressCalc('+')">+</button>
-
-      <button class="calcBtn" style="width: 96%;" onclick="clearCalc()">Clear</button>
-    </div>
-  </div>
-</div>
-
-<!-- ✅ Casino Content Wrapper -->
-<div id="casinoContent">
-
-  <!-- ✅ Startup Gate -->
-  <div id="startupOverlay">
-    <h2>Are you a student or a teacher?</h2>
-    <button id="studentBtn" onclick="startSite()">Student</button>
-    <button id="teacherBtn" onclick="closeSite()">Teacher</button>
-  </div>
-
-  <h1>Casino Game Hub</h1>
-
-  <div class="games">
-
-    <div class="card">
-      <h2>Blackjack</h2>
-      <p>Beat the dealer to 21.</p>
-      <button class="btn" onclick="openGame('blackjack.html')">Play</button>
-    </div>
-
-    <div class="card">
-      <h2>Roulette</h2>
-      <p>Bet on red, black, or numbers.</p>
-      <button class="btn" onclick="openGame('roulette.html')">Play</button>
-    </div>
-
-    <div class="card">
-      <h2>Poker</h2>
-      <p>Classic Texas Hold'em.</p>
-      <button class="btn" onclick="openGame('poker.html')">Play</button>
-    </div>
-
-    <div class="card">
-      <h2>Pool</h2>
-      <p>8‑ball billiards physics.</p>
-      <button class="btn" onclick="openGame('pool.html')">Play</button>
-    </div>
-
-    <div class="card">
-      <h2>Air Hockey</h2>
-      <p>1P/2P fast arcade action.</p>
-      <button class="btn" onclick="openGame('air_hockey.html')">Play</button>
-    </div>
-
-    <div class="card">
-      <h2>Slot Machine</h2>
-      <p>Classic 3‑reel fruit machine.</p>
-      <button class="btn" onclick="openGame('slot_machine.html')">Play</button>
-    </div>
-
-    <div class="card">
-      <h2>Tutorial</h2>
-      <p>Learn how to play.</p>
-      <button class="btn" onclick="openGame('tutorial.html')">Play</button>
-    </div>
-
-    <div class="card">
-      <h2>Craps</h2>
-      <p>Classic dice table.</p>
-      <button class="btn" onclick="openGame('craps.html')">Play</button>
-    </div>
-
-    <div class="card">
-      <h2>Higher or Lower</h2>
-      <p>Guess the next roll.</p>
-      <button class="btn" onclick="openGame('higher_lower.html')">Play</button>
-    </div>
-
-    <div class="card">
-      <h2>Info</h2>
-      <p>Your local stats.</p>
-      <button class="btn" onclick="openGame('info.html')">Open</button>
-    </div>
-
-  </div>
-
-  <iframe id="gameFrame"></iframe>
-
-</div>
-
-<script>
-  function openGame(file) {
-    const frame = document.getElementById("gameFrame");
-    frame.src = file;
-
-    setTimeout(() => {
-      frame.scrollIntoView({ behavior: "smooth" });
-    }, 150);
-  }
-
-  function closeSite() {
-    window.location.href = "about:blank";
-  }
-
-  function startSite() {
-    const today = new Date().toISOString().split("T")[0];
-    const lastPrompt = localStorage.getItem("last_prompt_date");
-
-    if (lastPrompt !== today) {
-      const name = prompt("Enter your name:");
-      if (name && name.trim() !== "") {
-        localStorage.setItem("last_user_name", name.trim());
-      }
-      localStorage.setItem("last_prompt_date", today);
-    }
-
-    document.getElementById("startupOverlay").style.display = "none";
-  }
-
-  /* ✅ Panic Key (Esc) + URL Change */
-  document.addEventListener("keydown", function(e) {
-    if (e.key === "Escape") {
-
-      // Hide casino, show calculator
-      document.getElementById("casinoContent").style.display = "none";
-      document.getElementById("calculatorScreen").style.display = "block";
-
-      // Change URL to harmless path
-      history.pushState({}, "", "/calculator");
-    }
-  });
-
-  /* ✅ Calculator Logic */
-  function pressCalc(val) {
-    document.getElementById("calcDisplay").value += val;
-  }
-
-  function clearCalc() {
-    document.getElementById("calcDisplay").value = "";
-  }
-
-  function calculate() {
-    try {
-      const result = eval(document.getElementById("calcDisplay").value);
-      document.getElementById("calcDisplay").value = result;
-    } catch {
-      document.getElementById("calcDisplay").value = "Error";
-    }
-  }
-</script>
-
-</body>
-</html>
+      <button class="calcBtn" onclick="pressCalc('9')">
