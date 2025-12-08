@@ -143,59 +143,47 @@
   /* ✅ Calculator Screen */
   #calculatorScreen {
     display: none;
-    background: #f4f4f4;
+    background: #e6e6e6;
     color: #111;
     position: fixed;
     inset: 0;
     padding: 40px;
     z-index: 99999;
-    overflow: auto;
   }
 
   #calcBox {
-    max-width: 320px;
-    margin: 60px auto;
+    max-width: 300px;
+    margin: 0 auto;
     background: white;
-    padding: 25px;
-    border-radius: 14px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
   }
 
   #calcDisplay {
     width: 100%;
     height: 60px;
     font-size: 28px;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     text-align: right;
-    padding: 10px 14px;
+    padding: 10px;
     border: 2px solid #ccc;
     border-radius: 8px;
-    background: #fefefe;
   }
 
   .calcBtn {
-    width: 23%;
+    width: 22%;
     margin: 1%;
-    padding: 14px 0;
+    padding: 15px;
     font-size: 20px;
     border: none;
-    background: #e0e0e0;
+    background: #ddd;
     border-radius: 8px;
     cursor: pointer;
-    transition: background 0.2s;
-  }
-
-  .calcBtn:hover {
-    background: #d0d0d0;
   }
 
   .calcBtn:active {
     background: #bbb;
-  }
-
-  .calcBtn.wide {
-    width: 96%;
-    margin-top: 10px;
   }
 </style>
 
@@ -230,7 +218,7 @@
       <button class="calcBtn" onclick="calculate()">=</button>
       <button class="calcBtn" onclick="pressCalc('+')">+</button>
 
-      <button class="calcBtn wide" onclick="clearCalc()">Clear</button>
+      <button class="calcBtn" style="width: 96%;" onclick="clearCalc()">Clear</button>
     </div>
   </div>
 </div>
