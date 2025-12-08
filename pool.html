@@ -473,3 +473,7 @@
         const x = startX + (Math.random() - 0.5) * 40;
         const y = startY + (Math.random() - 0.5) * 40;
 
+document.addEventListener("DOMContentLoaded", () => {
+  rackBalls();
+  requestAnimationFrame(loop);
+});
