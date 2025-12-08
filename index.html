@@ -26,7 +26,6 @@
     margin-bottom: 30px;
   }
 
-  /* ✅ Responsive grid */
   .games {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -78,7 +77,6 @@
     box-shadow: 0 2px 0 #8a6220;
   }
 
-  /* ✅ Game iframe */
   #gameFrame {
     width: 100%;
     height: 700px;
@@ -89,7 +87,6 @@
     display: block;
   }
 
-  /* ✅ Startup Overlay */
   #startupOverlay {
     position: fixed;
     inset: 0;
@@ -207,21 +204,21 @@
 <iframe id="gameFrame"></iframe>
 
 <script>
-  /* ✅ Count site opens (daily) */
+  /* ✅ Daily site open counter */
   const today = new Date().toISOString().split("T")[0];
   const savedDate = localStorage.getItem("site_last_date");
   let siteCount = Number(localStorage.getItem("site_open_count")) || 0;
 
   if (savedDate !== today) {
     siteCount = 0;
+    localStorage.setItem("user_activity", JSON.stringify({})); // ✅ Reset daily activity
   }
 
   siteCount++;
-
   localStorage.setItem("site_last_date", today);
   localStorage.setItem("site_open_count", siteCount);
 
-  /* ✅ Load games into iframe */
+  /* ✅ Load games */
   function openGame(file) {
     const frame = document.getElementById("gameFrame");
     frame.src = file;
@@ -231,17 +228,23 @@
     }, 150);
   }
 
-  /* ✅ Startup Gate + Name Saving */
+  /* ✅ Startup Gate + Name Saving + Activity Tracking */
   function startSite() {
     const name = prompt("Enter your name:");
 
     if (name && name.trim() !== "") {
       let users = JSON.parse(localStorage.getItem("users_list") || "[]");
+      let activity = JSON.parse(localStorage.getItem("user_activity") || "{}");
 
-      if (!users.includes(name.trim())) {
-        users.push(name.trim());
+      const clean = name.trim();
+
+      if (!users.includes(clean)) {
+        users.push(clean);
         localStorage.setItem("users_list", JSON.stringify(users));
       }
+
+      activity[clean] = (activity[clean] || 0) + 1;
+      localStorage.setItem("user_activity", JSON.stringify(activity));
     }
 
     document.getElementById("startupOverlay").style.display = "none";
