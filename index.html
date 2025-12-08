@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -198,7 +198,7 @@
 
   <div class="card">
     <h2>Info</h2>
-    <p>Daily page view counter.</p>
+    <p>Daily site opens + users.</p>
     <button class="btn" onclick="openGame('info.html')">Open</button>
   </div>
 
@@ -207,6 +207,21 @@
 <iframe id="gameFrame"></iframe>
 
 <script>
+  /* ✅ Count site opens (daily) */
+  const today = new Date().toISOString().split("T")[0];
+  const savedDate = localStorage.getItem("site_last_date");
+  let siteCount = Number(localStorage.getItem("site_open_count")) || 0;
+
+  if (savedDate !== today) {
+    siteCount = 0;
+  }
+
+  siteCount++;
+
+  localStorage.setItem("site_last_date", today);
+  localStorage.setItem("site_open_count", siteCount);
+
+  /* ✅ Load games into iframe */
   function openGame(file) {
     const frame = document.getElementById("gameFrame");
     frame.src = file;
@@ -239,5 +254,3 @@
 
 </body>
 </html>
-
-
