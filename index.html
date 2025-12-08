@@ -204,21 +204,12 @@
 <iframe id="gameFrame"></iframe>
 
 <script>
-  /* ✅ Daily site open counter */
-  const today = new Date().toISOString().split("T")[0];
-  const savedDate = localStorage.getItem("site_last_date");
-  let siteCount = Number(localStorage.getItem("site_open_count")) || 0;
-
-  if (savedDate !== today) {
-    siteCount = 0;
-    localStorage.setItem("user_activity", JSON.stringify({})); // ✅ Reset daily activity
+  // ✅ Helper: get today's date as YYYY-MM-DD
+  function getTodayString() {
+    return new Date().toISOString().split("T")[0];
   }
 
-  siteCount++;
-  localStorage.setItem("site_last_date", today);
-  localStorage.setItem("site_open_count", siteCount);
-
-  /* ✅ Load games */
+  // ✅ Load games in the iframe in the same tab
   function openGame(file) {
     const frame = document.getElementById("gameFrame");
     frame.src = file;
@@ -228,59 +219,122 @@
     }, 150);
   }
 
-  /* ✅ Startup Gate + Name Saving + Activity Tracking */
-  function startSite() {
-    const name = prompt("Enter your name:");
-
-    if (name && name.trim() !== "") {
-      let users = JSON.parse(localStorage.getItem("users_list") || "[]");
-      let activity = JSON.parse(localStorage.getItem("user_activity") || "{}");
-
-      const clean = name.trim();
-
-      if (!users.includes(clean)) {
-        users.push(clean);
-        localStorage.setItem("users_list", JSON.stringify(users));
-      }
-
-      activity[clean] = (activity[clean] || 0) + 1;
-      localStorage.setItem("user_activity", JSON.stringify(activity));
-    }
-
-    document.getElementById("startupOverlay").style.display = "none";
-  }
-
+  // ✅ Close site for Teacher
   function closeSite() {
     window.location.href = "about:blank";
   }
 </script>
-<!-- Firebase SDK -->
+
+<!-- ✅ Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
 
-<script> 
-  // Your Firebase config goes here
+<script>
+  // ✅ Your Firebase config (from your project)
   const firebaseConfig = {
-    apiKey: "YOUR_KEY",
-    authDomain: "YOUR_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_BUCKET",
-    messagingSenderId: "YOUR_SENDER",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyD9OM6J2tTo5Hj2WCT13ztUPpP61s2XZ9c",
+    authDomain: "casinohub-9c9e1.firebaseapp.com",
+    projectId: "casinohub-9c9e1",
+    storageBucket: "casinohub-9c9e1.appspot.com",
+    messagingSenderId: "811062003530",
+    appId: "1:811062003530:web:5a93c6e17e7b27c1ad6b3b",
+    measurementId: "G-M63NEGYSYQ"
   };
 
-  // Initialize Firebase
+  // ✅ Initialize Firebase + Firestore
   const app = firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 </script>
+
 <script>
-  db.collection("test").add({
-    message: "Hello from GitHub Pages!"
-  });
+  // ✅ Global collections:
+  // - "meta" document "daily" → { date, siteOpenCount }
+  // - "users" → one document per user name
+  // - "dailyActivity" document "<YYYY-MM-DD>" → { name: count }
+
+  const today = getTodayString();
+
+  // ✅ Ensure daily meta document exists and increment global site opens
+  async function incrementSiteOpens() {
+    const metaRef = db.collection("meta").doc("daily");
+
+    try {
+      const docSnap = await metaRef.get();
+
+      if (!docSnap.exists || docSnap.data().date !== today) {
+        // New day: reset count
+        await metaRef.set({
+          date: today,
+          siteOpenCount: 1
+        });
+      } else {
+        const currentCount = docSnap.data().siteOpenCount || 0;
+        await metaRef.update({
+          siteOpenCount: currentCount + 1
+        });
+      }
+    } catch (err) {
+      console.error("Error updating site opens:", err);
+    }
+  }
+
+  // ✅ Startup Gate + Name Saving + Global Activity Tracking
+  async function startSite() {
+    const lastPromptDate = localStorage.getItem("last_prompt_date");
+
+    if (lastPromptDate === today) {
+      document.getElementById("startupOverlay").style.display = "none";
+      await incrementSiteOpens();
+      return;
+    }
+
+    const name = prompt("Enter your name:");
+
+    if (name && name.trim() !== "") {
+      const clean = name.trim();
+
+      localStorage.setItem("last_prompt_date", today);
+      localStorage.setItem("last_user_name", clean);
+
+      try {
+        const userRef = db.collection("users").doc(clean);
+        const userSnap = await userRef.get();
+
+        if (!userSnap.exists) {
+          await userRef.set({
+            name: clean,
+            createdAt: new Date().toISOString(),
+            totalVisits: 1
+          });
+        } else {
+          const data = userSnap.data();
+          await userRef.update({
+            totalVisits: (data.totalVisits || 0) + 1
+          });
+        }
+
+        const dailyRef = db.collection("dailyActivity").doc(today);
+        const dailySnap = await dailyRef.get();
+        let activityData = dailySnap.exists ? dailySnap.data() : {};
+
+        const currentCount = activityData[clean] || 0;
+        activityData[clean] = currentCount + 1;
+
+        await dailyRef.set(activityData, { merge: true });
+
+      } catch (err) {
+        console.error("Error tracking user:", err);
+      }
+    }
+
+    document.getElementById("startupOverlay").style.display = "none";
+    await incrementSiteOpens();
+  }
+
+  // ✅ Auto-run on page load:
+  // We only increment site opens after the user chooses Student (startSite),
+  // so we don't auto-call incrementSiteOpens() here.
 </script>
 
 </body>
 </html>
-
-
-
