@@ -309,12 +309,11 @@
     document.getElementById("startupOverlay").style.display = "none";
   }
 
-  /* ✅ Panic Key (Esc) */
-  document.addEventListener("keydown", function(e) {
-    if (e.key === "Escape") {
-      document.body.innerHTML = "";
-      document.body.appendChild(document.getElementById("calculatorScreen"));
-      document.getElementById("calculatorScreen").style.display = "block";
+ /* ✅ Panic Key (Esc) */
+ document.addEventListener("keydown", function(e) {
+   if (e.key === "Escape") {
+     document.getElementById("casinoContent").style.display = "none";
+     document.getElementById("calculatorScreen").style.display = "block";
     }
   });
 
@@ -339,3 +338,4 @@
 
 </body>
 </html>
+
