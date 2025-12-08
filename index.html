@@ -124,10 +124,86 @@
     background: #f66;
     color: #111;
   }
+
+  /* ✅ Calculator Screen */
+  #calculatorScreen {
+    display: none;
+    background: #e6e6e6;
+    color: #111;
+    position: fixed;
+    inset: 0;
+    padding: 40px;
+    z-index: 99999;
+  }
+
+  #calcBox {
+    max-width: 300px;
+    margin: 0 auto;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+  }
+
+  #calcDisplay {
+    width: 100%;
+    height: 60px;
+    font-size: 28px;
+    margin-bottom: 15px;
+    text-align: right;
+    padding: 10px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+  }
+
+  .calcBtn {
+    width: 22%;
+    margin: 1%;
+    padding: 15px;
+    font-size: 20px;
+    border: none;
+    background: #ddd;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .calcBtn:active {
+    background: #bbb;
+  }
 </style>
 
 </head>
 <body>
+
+<!-- ✅ Calculator Panic Screen -->
+<div id="calculatorScreen">
+  <div id="calcBox">
+    <input id="calcDisplay" disabled>
+    <div>
+      <button class="calcBtn" onclick="pressCalc('7')">7</button>
+      <button class="calcBtn" onclick="pressCalc('8')">8</button>
+      <button class="calcBtn" onclick="pressCalc('9')">9</button>
+      <button class="calcBtn" onclick="pressCalc('/')">÷</button>
+
+      <button class="calcBtn" onclick="pressCalc('4')">4</button>
+      <button class="calcBtn" onclick="pressCalc('5')">5</button>
+      <button class="calcBtn" onclick="pressCalc('6')">6</button>
+      <button class="calcBtn" onclick="pressCalc('*')">×</button>
+
+      <button class="calcBtn" onclick="pressCalc('1')">1</button>
+      <button class="calcBtn" onclick="pressCalc('2')">2</button>
+      <button class="calcBtn" onclick="pressCalc('3')">3</button>
+      <button class="calcBtn" onclick="pressCalc('-')">−</button>
+
+      <button class="calcBtn" onclick="pressCalc('0')">0</button>
+      <button class="calcBtn" onclick="pressCalc('.')">.</button>
+      <button class="calcBtn" onclick="calculate()">=</button>
+      <button class="calcBtn" onclick="pressCalc('+')">+</button>
+
+      <button class="calcBtn" style="width: 96%;" onclick="clearCalc()">Clear</button>
+    </div>
+  </div>
+</div>
 
 <!-- ✅ Startup Gate -->
 <div id="startupOverlay">
@@ -231,6 +307,33 @@
     }
 
     document.getElementById("startupOverlay").style.display = "none";
+  }
+
+  /* ✅ Panic Key (Esc) */
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape") {
+      document.body.innerHTML = "";
+      document.body.appendChild(document.getElementById("calculatorScreen"));
+      document.getElementById("calculatorScreen").style.display = "block";
+    }
+  });
+
+  /* ✅ Calculator Logic */
+  function pressCalc(val) {
+    document.getElementById("calcDisplay").value += val;
+  }
+
+  function clearCalc() {
+    document.getElementById("calcDisplay").value = "";
+  }
+
+  function calculate() {
+    try {
+      const result = eval(document.getElementById("calcDisplay").value);
+      document.getElementById("calcDisplay").value = result;
+    } catch {
+      document.getElementById("calcDisplay").value = "Error";
+    }
   }
 </script>
 
