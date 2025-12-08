@@ -26,12 +26,32 @@
     color: #222;
     padding: 12px 20px;
     font-size: 18px;
-    text-align: center;
     border-bottom: 1px solid #ccc;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     position: sticky;
     top: 0;
     z-index: 9998;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  #updateText {
+    flex-grow: 1;
+    text-align: center;
+  }
+
+  #closeUpdate {
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #444;
+    padding: 0 5px;
+  }
+
+  #closeUpdate:hover {
+    color: #000;
   }
 
   h1 {
@@ -143,47 +163,59 @@
   /* ✅ Calculator Screen */
   #calculatorScreen {
     display: none;
-    background: #e6e6e6;
+    background: #f4f4f4;
     color: #111;
     position: fixed;
     inset: 0;
     padding: 40px;
     z-index: 99999;
+    overflow: auto;
   }
 
   #calcBox {
-    max-width: 300px;
-    margin: 0 auto;
+    max-width: 320px;
+    margin: 60px auto;
     background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    padding: 25px;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
   }
 
   #calcDisplay {
     width: 100%;
     height: 60px;
     font-size: 28px;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     text-align: right;
-    padding: 10px;
+    padding: 10px 14px;
     border: 2px solid #ccc;
     border-radius: 8px;
+    background: #fefefe;
   }
 
   .calcBtn {
-    width: 22%;
+    width: 23%;
     margin: 1%;
-    padding: 15px;
+    padding: 14px 0;
     font-size: 20px;
     border: none;
-    background: #ddd;
+    background: #e0e0e0;
     border-radius: 8px;
     cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .calcBtn:hover {
+    background: #d0d0d0;
   }
 
   .calcBtn:active {
     background: #bbb;
+  }
+
+  .calcBtn.wide {
+    width: 96%;
+    margin-top: 10px;
   }
 </style>
 
@@ -191,7 +223,10 @@
 <body>
 
 <!-- ✅ Update Bar -->
-<div id="updateBar">Loading latest update…</div>
+<div id="updateBar">
+  <span id="updateText">Loading latest update…</span>
+  <button id="closeUpdate">✕</button>
+</div>
 
 <!-- ✅ Calculator Panic Screen -->
 <div id="calculatorScreen">
@@ -218,7 +253,7 @@
       <button class="calcBtn" onclick="calculate()">=</button>
       <button class="calcBtn" onclick="pressCalc('+')">+</button>
 
-      <button class="calcBtn" style="width: 96%;" onclick="clearCalc()">Clear</button>
+      <button class="calcBtn wide" onclick="clearCalc()">Clear</button>
     </div>
   </div>
 </div>
@@ -275,7 +310,7 @@
 
     <div class="card">
       <h2>Tutorial</h2>
-      <p>Learn how to play.</p>
+      <p>Learn how to use the hub.</p>
       <button class="btn" onclick="openGame('tutorial.html')">Play</button>
     </div>
 
@@ -305,14 +340,24 @@
 
 <script>
   /* ✅ Load update text from updates.txt */
-  fetch("./updates.txt")
-    .then(response => response.text())
-    .then(text => {
-      document.getElementById("updateBar").textContent = text.trim();
-    })
-    .catch(() => {
-      document.getElementById("updateBar").textContent = "No updates available.";
-    });
+  if (!localStorage.getItem("updateDismissed")) {
+    fetch("./updates.txt")
+      .then(response => response.text())
+      .then(text => {
+        document.getElementById("updateText").textContent = text.trim();
+      })
+      .catch(() => {
+        document.getElementById("updateText").textContent = "No updates available.";
+      });
+  } else {
+    document.getElementById("updateBar").style.display = "none";
+  }
+
+  /* ✅ Close button logic */
+  document.getElementById("closeUpdate").addEventListener("click", () => {
+    document.getElementById("updateBar").style.display = "none";
+    localStorage.setItem("updateDismissed", "true");
+  });
 
   function openGame(file) {
     const frame = document.getElementById("gameFrame");
@@ -345,12 +390,8 @@
   /* ✅ Panic Key (Esc) + URL Change */
   document.addEventListener("keydown", function(e) {
     if (e.key === "Escape") {
-
-      // Hide casino, show calculator
       document.getElementById("casinoContent").style.display = "none";
       document.getElementById("calculatorScreen").style.display = "block";
-
-      // Change URL to harmless path
       history.pushState({}, "", "/calculator");
     }
   });
