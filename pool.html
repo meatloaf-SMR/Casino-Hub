@@ -178,7 +178,7 @@
 
     <div class="hud">
       <div class="indicator">
-        Mouse to aim, hold left mouse to set power, release to shoot. Balls sunk: 
+        Mouse to aim, hold left mouse to set power, release to shoot. Balls sunk:
         <span class="value" id="ballsSunk">0</span>
       </div>
       <div class="controls">
@@ -207,7 +207,7 @@
       width: canvas.width,
       height: canvas.height,
       cushion: 20,
-      pocketRadius: 18
+      pocketRadius: 16   // matches visual pocket radius better
     };
 
     const BALL_RADIUS = 10;
@@ -228,9 +228,8 @@
     let cueBall = null;
     let ballsSunk = 0;
 
-    let aiming = false;
+    let isCharging = false;
     let power = 0;
-    let powerIncreasing = false;
     let mousePos = { x: 0, y: 0 };
 
     let lastTime = 0;
@@ -254,11 +253,13 @@
       ballsSunk = 0;
       ballsSunkSpan.textContent = "0";
 
+      // Cue ball
       const cueX = TABLE.width * 0.25;
       const cueY = TABLE.height / 2;
       cueBall = createBall(cueX, cueY, "#ffffff", 0, true);
       balls.push(cueBall);
 
+      // Triangle rack
       const colors = [
         "#f4d35e", "#ee964b", "#f95738", "#0d3b66", "#6c757d",
         "#9b5de5", "#00bbf9", "#00f5d4", "#f15bb5", "#2ec4b6",
@@ -273,7 +274,7 @@
       for (let row = 0; row < rows; row++) {
         const ballsInRow = rows - row;
         const offsetX = row * (BALL_RADIUS * 2 + 1.5);
-        const yStart = startY - (ballsInRow - 1) * (BALL_RADIUS + 1) / 2 * 2;
+        const yStart = startY - (ballsInRow - 1) * (BALL_RADIUS + 1);
 
         for (let i = 0; i < ballsInRow; i++) {
           const x = startX + offsetX;
@@ -289,10 +290,13 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       ctx.fillStyle = "#14542b";
-      ctx.fillRect(TABLE.cushion, TABLE.cushion,
-                   TABLE.width - TABLE.cushion * 2,
-                   TABLE.height - TABLE.cushion * 2);
+      ctx.fillRect(
+        TABLE.cushion, TABLE.cushion,
+        TABLE.width - TABLE.cushion * 2,
+        TABLE.height - TABLE.cushion * 2
+      );
 
+      // Center line
       ctx.strokeStyle = "rgba(255,255,255,0.15)";
       ctx.lineWidth = 1;
       ctx.setLineDash([8, 6]);
@@ -342,23 +346,31 @@
     function shadeColor(color, percent) {
       const f = parseInt(color.slice(1), 16);
       const t = percent < 0 ? 0 : 255;
-      const p = percent < 0 ? percent * -1 : percent;
+      const p = Math.abs(percent) / 100;
       const R = f >> 16;
-      const G = f >> 8 & 0x00FF;
+      const G = (f >> 8) & 0x00FF;
       const B = f & 0x0000FF;
-      const newR = (Math.round((t - R) * p / 100) + R);
-      const newG = (Math.round((t - G) * p / 100) + G);
-      const newB = (Math.round((t - B) * p / 100) + B);
-      return "#" + (0x1000000 + newR * 0x10000 + newG * 0x100 + newB).toString(16).slice(1);
+      const newR = Math.round((t - R) * p + R);
+      const newG = Math.round((t - G) * p + G);
+      const newB = Math.round((t - B) * p + B);
+      return (
+        "#" +
+        (0x1000000 + newR * 0x10000 + newG * 0x100 + newB)
+          .toString(16)
+          .slice(1)
+      );
+    }
+
+    function ballsMoving() {
+      return balls.some(
+        b => !b.sunk && (Math.abs(b.vx) > MIN_SPEED || Math.abs(b.vy) > MIN_SPEED)
+      );
     }
 
     function drawAimLine() {
-      if (!cueBall || aiming || ballsMoving()) {
-        if (!cueBall || ballsMoving()) return;
-      }
-
-      if (!cueBall || ballsMoving()) return;
-
+      if (!cueBall || cueBall.sunk) return;
+      if (ballsMoving()) return;
+      // Show line even while charging, as long as ball is at rest
       const dx = mousePos.x - cueBall.x;
       const dy = mousePos.y - cueBall.y;
       const len = Math.hypot(dx, dy) || 1;
@@ -373,10 +385,6 @@
       ctx.lineTo(cueBall.x + ux * 120, cueBall.y + uy * 120);
       ctx.stroke();
       ctx.setLineDash([]);
-    }
-
-    function ballsMoving() {
-      return balls.some(b => !b.sunk && (Math.abs(b.vx) > MIN_SPEED || Math.abs(b.vy) > MIN_SPEED));
     }
 
     function updatePhysics(dt) {
@@ -444,7 +452,7 @@
 
       const kx = b1.vx - b2.vx;
       const ky = b1.vy - b2.vy;
-      const p = 2 * (nx * kx + ny * ky) / 2;
+      const p = (2 * (nx * kx + ny * ky)) / 2; // equal mass
 
       b1.vx = b1.vx - p * nx;
       b1.vy = b1.vy - p * ny;
@@ -468,12 +476,8 @@
               ballsSunk++;
               ballsSunkSpan.textContent = ballsSunk;
             } else {
-              setTimeout(() => {
-                cueBall.sunk = false;
-                cueBall.x = TABLE.width * 0.25;
-                cueBall.y = TABLE.height / 2;
-                cueBall.vx = cueBall.vy = 0;
-              }, 600);
+              // Respawn cue ball in a safe spot
+              setTimeout(respawnCueBall, 500);
             }
             break;
           }
@@ -481,17 +485,61 @@
       });
     }
 
+    function respawnCueBall() {
+      if (!cueBall) return;
+      const startX = TABLE.width * 0.25;
+      const startY = TABLE.height / 2;
+
+      // Try a few spots around the default
+      let placed = false;
+      const maxAttempts = 50;
+      for (let i = 0; i < maxAttempts && !placed; i++) {
+        const x = startX + (Math.random() - 0.5) * 40;
+        const y = startY + (Math.random() - 0.5) * 40;
+
+        if (!collidesWithAnyBall(x, y, cueBall.radius)) {
+          cueBall.sunk = false;
+          cueBall.x = x;
+          cueBall.y = y;
+          cueBall.vx = 0;
+          cueBall.vy = 0;
+          placed = true;
+        }
+      }
+
+      if (!placed) {
+        cueBall.sunk = false;
+        cueBall.x = startX;
+        cueBall.y = startY;
+        cueBall.vx = 0;
+        cueBall.vy = 0;
+      }
+    }
+
+    function collidesWithAnyBall(x, y, radius) {
+      return balls.some(b => {
+        if (b === cueBall || b.sunk) return false;
+        const dx = b.x - x;
+        const dy = b.y - y;
+        return Math.hypot(dx, dy) < b.radius + radius + 2;
+      });
+    }
+
     function loop(timestamp) {
-      const dt = (timestamp - lastTime) / 16.67;
+      const dt = (timestamp - lastTime) / 16.67 || 1;
       lastTime = timestamp;
 
       updatePhysics(dt);
 
       drawTable();
       drawBalls();
+      drawAimLine();
 
-      if (!ballsMoving() && cueBall && !cueBall.sunk) {
-        drawAimLine();
+      // If charging, grow power here (single place, no intervals)
+      if (isCharging && !ballsMoving() && cueBall && !cueBall.sunk) {
+        power += 0.4;
+        if (power > MAX_POWER) power = MAX_POWER;
+        updatePowerBar();
       }
 
       requestAnimationFrame(loop);
@@ -505,25 +553,22 @@
 
     canvas.addEventListener("mousedown", e => {
       if (!cueBall || ballsMoving() || cueBall.sunk) return;
-      aiming = true;
-      powerIncreasing = true;
-      power = 0;
 
-      const powerInterval = setInterval(() => {
-        if (!powerIncreasing) {
-          clearInterval(powerInterval);
-          return;
-        }
-        power += 0.9;
-        if (power > MAX_POWER) power = MAX_POWER;
-        updatePowerBar();
-      }, 40);
+      // Optional: require click near cue ball to start charging
+      const dx = mousePos.x - cueBall.x;
+      const dy = mousePos.y - cueBall.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > cueBall.radius * 3) return;
+
+      isCharging = true;
+      power = 0;
+      updatePowerBar();
     });
 
     canvas.addEventListener("mouseup", e => {
-      if (!cueBall || cueBall.sunk || !aiming) return;
-      aiming = false;
-      powerIncreasing = false;
+      if (!cueBall || cueBall.sunk || !isCharging) return;
+
+      isCharging = false;
 
       const dx = mousePos.x - cueBall.x;
       const dy = mousePos.y - cueBall.y;
@@ -548,6 +593,7 @@
       rackBalls();
     });
 
+    // Initialize
     rackBalls();
     requestAnimationFrame(loop);
   </script>
