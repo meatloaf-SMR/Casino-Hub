@@ -19,6 +19,19 @@
     min-height: 100vh;
   }
 
+  /* ✅ Connection Banner */
+  #connectionBanner {
+    width: 100%;
+    padding: 12px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: #111;
+    background: #ccc;
+    border-radius: 6px;
+    margin-bottom: 20px;
+  }
+
   h1 {
     text-align: center;
     font-size: 48px;
@@ -128,6 +141,9 @@
 </head>
 <body>
 
+<!-- ✅ Connection Banner -->
+<div id="connectionBanner">Checking Firebase connection…</div>
+
 <!-- ✅ Startup Gate -->
 <div id="startupOverlay">
   <h2>Are you a student or a teacher?</h2>
@@ -204,12 +220,10 @@
 <iframe id="gameFrame"></iframe>
 
 <script>
-  // ✅ Helper: get today's date as YYYY-MM-DD
   function getTodayString() {
     return new Date().toISOString().split("T")[0];
   }
 
-  // ✅ Load games in the iframe in the same tab
   function openGame(file) {
     const frame = document.getElementById("gameFrame");
     frame.src = file;
@@ -219,18 +233,16 @@
     }, 150);
   }
 
-  // ✅ Close site for Teacher
   function closeSite() {
     window.location.href = "about:blank";
   }
 </script>
 
-<!-- ✅ Firebase SDKs -->
+<!-- ✅ Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
 
 <script>
-  // ✅ Your Firebase config (from your project)
   const firebaseConfig = {
     apiKey: "AIzaSyD9OM6J2tTo5Hj2WCT13ztUPpP61s2XZ9c",
     authDomain: "casinohub-9c9e1.firebaseapp.com",
@@ -241,48 +253,52 @@
     measurementId: "G-M63NEGYSYQ"
   };
 
-  // ✅ Initialize Firebase + Firestore
   const app = firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 </script>
 
 <script>
-  // ✅ Global collections:
-  // - "meta" document "daily" → { date, siteOpenCount }
-  // - "users" → one document per user name
-  // - "dailyActivity" document "<YYYY-MM-DD>" → { name: count }
-
-  const today = getTodayString();
-
-  // ✅ Ensure daily meta document exists and increment global site opens
-  async function incrementSiteOpens() {
-    const metaRef = db.collection("meta").doc("daily");
+  async function testConnection() {
+    const banner = document.getElementById("connectionBanner");
 
     try {
-      const docSnap = await metaRef.get();
+      await db.collection("connectionTest").add({
+        time: Date.now(),
+        status: "ok"
+      });
 
-      if (!docSnap.exists || docSnap.data().date !== today) {
-        // New day: reset count
-        await metaRef.set({
-          date: today,
-          siteOpenCount: 1
-        });
-      } else {
-        const currentCount = docSnap.data().siteOpenCount || 0;
-        await metaRef.update({
-          siteOpenCount: currentCount + 1
-        });
-      }
+      banner.style.background = "#7CFC00";
+      banner.textContent = "✅ Connected to Firebase";
     } catch (err) {
-      console.error("Error updating site opens:", err);
+      banner.style.background = "#ff6b6b";
+      banner.textContent = "❌ Not Connected to Firebase";
     }
   }
 
-  // ✅ Startup Gate + Name Saving + Global Activity Tracking
-  async function startSite() {
-    const lastPromptDate = localStorage.getItem("last_prompt_date");
+  testConnection();
+</script>
 
-    if (lastPromptDate === today) {
+<script>
+  const today = getTodayString();
+
+  async function incrementSiteOpens() {
+    const metaRef = db.collection("meta").doc("daily");
+
+    const snap = await metaRef.get();
+
+    if (!snap.exists || snap.data().date !== today) {
+      await metaRef.set({ date: today, siteOpenCount: 1 });
+    } else {
+      await metaRef.update({
+        siteOpenCount: (snap.data().siteOpenCount || 0) + 1
+      });
+    }
+  }
+
+  async function startSite() {
+    const lastPrompt = localStorage.getItem("last_prompt_date");
+
+    if (lastPrompt === today) {
       document.getElementById("startupOverlay").style.display = "none";
       await incrementSiteOpens();
       return;
@@ -296,44 +312,33 @@
       localStorage.setItem("last_prompt_date", today);
       localStorage.setItem("last_user_name", clean);
 
-      try {
-        const userRef = db.collection("users").doc(clean);
-        const userSnap = await userRef.get();
+      const userRef = db.collection("users").doc(clean);
+      const userSnap = await userRef.get();
 
-        if (!userSnap.exists) {
-          await userRef.set({
-            name: clean,
-            createdAt: new Date().toISOString(),
-            totalVisits: 1
-          });
-        } else {
-          const data = userSnap.data();
-          await userRef.update({
-            totalVisits: (data.totalVisits || 0) + 1
-          });
-        }
-
-        const dailyRef = db.collection("dailyActivity").doc(today);
-        const dailySnap = await dailyRef.get();
-        let activityData = dailySnap.exists ? dailySnap.data() : {};
-
-        const currentCount = activityData[clean] || 0;
-        activityData[clean] = currentCount + 1;
-
-        await dailyRef.set(activityData, { merge: true });
-
-      } catch (err) {
-        console.error("Error tracking user:", err);
+      if (!userSnap.exists) {
+        await userRef.set({
+          name: clean,
+          createdAt: new Date().toISOString(),
+          totalVisits: 1
+        });
+      } else {
+        await userRef.update({
+          totalVisits: (userSnap.data().totalVisits || 0) + 1
+        });
       }
+
+      const dailyRef = db.collection("dailyActivity").doc(today);
+      const dailySnap = await dailyRef.get();
+      const data = dailySnap.exists ? dailySnap.data() : {};
+
+      data[clean] = (data[clean] || 0) + 1;
+
+      await dailyRef.set(data, { merge: true });
     }
 
     document.getElementById("startupOverlay").style.display = "none";
     await incrementSiteOpens();
   }
-
-  // ✅ Auto-run on page load:
-  // We only increment site opens after the user chooses Student (startSite),
-  // so we don't auto-call incrementSiteOpens() here.
 </script>
 
 </body>
