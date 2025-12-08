@@ -13,6 +13,19 @@
     padding: 40px;
   }
 
+  /* ✅ Connection Banner */
+  #connectionBanner {
+    width: 100%;
+    padding: 12px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: #111;
+    background: #ccc;
+    border-radius: 6px;
+    margin-bottom: 20px;
+  }
+
   h1 {
     font-size: 42px;
     margin-bottom: 20px;
@@ -56,6 +69,9 @@
 </head>
 <body>
 
+<!-- ✅ Connection Banner -->
+<div id="connectionBanner">Checking Firebase connection…</div>
+
 <h1>Casino Hub – Global Stats</h1>
 
 <div id="statsBox">
@@ -81,7 +97,31 @@
 
   const app = firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
+</script>
 
+<script>
+  /* ✅ Connection Test */
+  async function testConnection() {
+    const banner = document.getElementById("connectionBanner");
+
+    try {
+      await db.collection("connectionTest_info").add({
+        time: Date.now(),
+        status: "ok"
+      });
+
+      banner.style.background = "#7CFC00";
+      banner.textContent = "✅ Connected to Firebase";
+    } catch (err) {
+      banner.style.background = "#ff6b6b";
+      banner.textContent = "❌ Not Connected to Firebase";
+    }
+  }
+
+  testConnection();
+</script>
+
+<script>
   function getTodayString() {
     return new Date().toISOString().split("T")[0];
   }
@@ -91,11 +131,11 @@
     const statsBox = document.getElementById("statsBox");
 
     try {
-      // ✅ 1. Global site opens
+      /* ✅ 1. Global site opens */
       const metaSnap = await db.collection("meta").doc("daily").get();
       const siteOpens = metaSnap.exists ? metaSnap.data().siteOpenCount : 0;
 
-      // ✅ 2. Global user list
+      /* ✅ 2. Global users */
       const usersSnap = await db.collection("users").get();
       const userList = [];
       usersSnap.forEach(doc => {
@@ -103,15 +143,15 @@
         userList.push(`${d.name} (visits: ${d.totalVisits || 0})`);
       });
 
-      // ✅ 3. Daily activity (Top 3)
+      /* ✅ 3. Daily activity */
       const dailySnap = await db.collection("dailyActivity").doc(today).get();
-      let activity = dailySnap.exists ? dailySnap.data() : {};
+      const activity = dailySnap.exists ? dailySnap.data() : {};
 
       const topUsers = Object.entries(activity)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 3);
 
-      // ✅ Render everything
+      /* ✅ Render */
       statsBox.innerHTML = `
         <div class="sectionTitle">Global Site Opens Today</div>
         <div>${siteOpens}</div>
@@ -120,7 +160,7 @@
         <div>${userList.length}</div>
 
         <div style="margin-top:10px; font-size:18px;">
-          ${userList.join("<br>")}
+          ${userList.length ? userList.join("<br>") : "No users yet."}
         </div>
 
         <div class="sectionTitle">Top 3 Users Today</div>
@@ -134,7 +174,6 @@
       `;
     } catch (err) {
       statsBox.innerHTML = "Error loading stats.";
-      console.error(err);
     }
   }
 
@@ -142,14 +181,11 @@
     if (!confirm("Reset ALL global stats?")) return;
 
     try {
-      // ✅ Clear meta
       await db.collection("meta").doc("daily").delete();
 
-      // ✅ Clear users
       const users = await db.collection("users").get();
       users.forEach(doc => doc.ref.delete());
 
-      // ✅ Clear daily activity
       const daily = await db.collection("dailyActivity").get();
       daily.forEach(doc => doc.ref.delete());
 
@@ -157,7 +193,6 @@
       loadStats();
     } catch (err) {
       alert("Error resetting stats.");
-      console.error(err);
     }
   }
 
