@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -216,8 +216,19 @@
     }, 150);
   }
 
-  /* ✅ Startup Gate Logic */
+  /* ✅ Startup Gate + Name Saving */
   function startSite() {
+    const name = prompt("Enter your name:");
+
+    if (name && name.trim() !== "") {
+      let users = JSON.parse(localStorage.getItem("users_list") || "[]");
+
+      if (!users.includes(name.trim())) {
+        users.push(name.trim());
+        localStorage.setItem("users_list", JSON.stringify(users));
+      }
+    }
+
     document.getElementById("startupOverlay").style.display = "none";
   }
 
