@@ -305,7 +305,7 @@
 
 <script>
   /* ✅ Load update text from updates.txt */
-  fetch("updates.txt")
+  fetch("./updates.txt")
     .then(response => response.text())
     .then(text => {
       document.getElementById("updateBar").textContent = text.trim();
