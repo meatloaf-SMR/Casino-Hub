@@ -48,18 +48,35 @@
 
   <p id="countText">Loading...</p>
 
-  <h2 style="margin-top:30px;">Users</h2>
+  <h2 style="margin-top:30px;">Top 3 Most Active Users Today</h2>
+  <ul id="topUsers"></ul>
+
+  <h2 style="margin-top:30px;">All Users</h2>
   <ul id="userList"></ul>
 </div>
 
 <script>
-  /* ✅ Read daily site open count (set by index.html) */
+  /* ✅ Daily site opens */
   const siteCount = Number(localStorage.getItem("site_open_count")) || 0;
-
   document.getElementById("countText").textContent =
     "The site has been opened " + siteCount + " times today.";
 
-  /* ✅ Load unique users */
+  /* ✅ Load user activity */
+  const activity = JSON.parse(localStorage.getItem("user_activity") || "{}");
+
+  const sorted = Object.entries(activity)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
+
+  const topList = document.getElementById("topUsers");
+
+  sorted.forEach(([name, count]) => {
+    const li = document.createElement("li");
+    li.textContent = `${name} — ${count} visits`;
+    topList.appendChild(li);
+  });
+
+  /* ✅ Load all users */
   const users = JSON.parse(localStorage.getItem("users_list") || "[]");
   const list = document.getElementById("userList");
 
