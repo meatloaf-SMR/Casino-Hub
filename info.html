@@ -53,24 +53,13 @@
 </div>
 
 <script>
-  // ✅ Daily counter
-  const today = new Date().toISOString().split("T")[0];
-  const savedDate = localStorage.getItem("info_last_date");
-  let count = Number(localStorage.getItem("info_count")) || 0;
-
-  if (savedDate !== today) {
-    count = 0;
-  }
-
-  count++;
-
-  localStorage.setItem("info_last_date", today);
-  localStorage.setItem("info_count", count);
+  /* ✅ Read daily site open count (set by index.html) */
+  const siteCount = Number(localStorage.getItem("site_open_count")) || 0;
 
   document.getElementById("countText").textContent =
-    "This page has been opened " + count + " times today.";
+    "The site has been opened " + siteCount + " times today.";
 
-  // ✅ User list
+  /* ✅ Load unique users */
   const users = JSON.parse(localStorage.getItem("users_list") || "[]");
   const list = document.getElementById("userList");
 
@@ -83,4 +72,3 @@
 
 </body>
 </html>
-
