@@ -19,19 +19,6 @@
     min-height: 100vh;
   }
 
-  /* ✅ Connection Banner */
-  #connectionBanner {
-    width: 100%;
-    padding: 12px;
-    text-align: center;
-    font-size: 18px;
-    font-weight: 600;
-    color: #111;
-    background: #ccc;
-    border-radius: 6px;
-    margin-bottom: 20px;
-  }
-
   h1 {
     text-align: center;
     font-size: 48px;
@@ -100,6 +87,7 @@
     display: block;
   }
 
+  /* ✅ Startup Gate */
   #startupOverlay {
     position: fixed;
     inset: 0;
@@ -140,9 +128,6 @@
 
 </head>
 <body>
-
-<!-- ✅ Connection Banner -->
-<div id="connectionBanner">Checking Firebase connection…</div>
 
 <!-- ✅ Startup Gate -->
 <div id="startupOverlay">
@@ -211,7 +196,7 @@
 
   <div class="card">
     <h2>Info</h2>
-    <p>Daily site opens + users.</p>
+    <p>Your local stats.</p>
     <button class="btn" onclick="openGame('info.html')">Open</button>
   </div>
 
@@ -220,10 +205,6 @@
 <iframe id="gameFrame"></iframe>
 
 <script>
-  function getTodayString() {
-    return new Date().toISOString().split("T")[0];
-  }
-
   function openGame(file) {
     const frame = document.getElementById("gameFrame");
     frame.src = file;
@@ -236,127 +217,22 @@
   function closeSite() {
     window.location.href = "about:blank";
   }
-</script>
 
-<!-- ✅ Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
-
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyD9OM6J2tTo5Hj2WCT13ztUPpP61s2XZ9c",
-    authDomain: "casinohub-9c9e1.firebaseapp.com",
-    projectId: "casinohub-9c9e1",
-    storageBucket: "casinohub-9c9e1.appspot.com",
-    messagingSenderId: "811062003530",
-    appId: "1:811062003530:web:5a93c6e17e7b27c1ad6b3b",
-    measurementId: "G-M63NEGYSYQ"
-  };
-
-  const app = firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-</script>
-
-<script>
-  /* ✅ Connection Test */
-  async function testConnection() {
-    const banner = document.getElementById("connectionBanner");
-
-    try {
-      await db.collection("connectionTest_index").add({
-        time: Date.now(),
-        status: "ok"
-      });
-
-      banner.style.background = "#7CFC00";
-      banner.textContent = "✅ Connected to Firebase";
-    } catch (err) {
-      banner.style.background = "#ff6b6b";
-      banner.textContent = "❌ Not Connected to Firebase";
-    }
-  }
-
-  testConnection();
-</script>
-
-<script>
-  const today = getTodayString();
-
-  async function incrementSiteOpens() {
-    const metaRef = db.collection("meta").doc("daily");
-
-    const snap = await metaRef.get();
-
-    if (!snap.exists || snap.data().date !== today) {
-      await metaRef.set({ date: today, siteOpenCount: 1 });
-    } else {
-      await metaRef.update({
-        siteOpenCount: (snap.data().siteOpenCount || 0) + 1
-      });
-    }
-  }
-
-  async function startSite() {
+  function startSite() {
+    const today = new Date().toISOString().split("T")[0];
     const lastPrompt = localStorage.getItem("last_prompt_date");
 
-    if (lastPrompt === today) {
-      document.getElementById("startupOverlay").style.display = "none";
-      await incrementSiteOpens();
-      return;
-    }
-
-    const name = prompt("Enter your name:");
-
-    if (name && name.trim() !== "") {
-      const clean = name.trim();
-
-      localStorage.setItem("last_prompt_date", today);
-      localStorage.setItem("last_user_name", clean);
-
-      const userRef = db.collection("users").doc(clean);
-      const userSnap = await userRef.get();
-
-      if (!userSnap.exists) {
-        await userRef.set({
-          name: clean,
-          createdAt: new Date().toISOString(),
-          totalVisits: 1
-        });
-      } else {
-        await userRef.update({
-          totalVisits: (userSnap.data().totalVisits || 0) + 1
-        });
+    if (lastPrompt !== today) {
+      const name = prompt("Enter your name:");
+      if (name && name.trim() !== "") {
+        localStorage.setItem("last_user_name", name.trim());
       }
-
-      const dailyRef = db.collection("dailyActivity").doc(today);
-      const dailySnap = await dailyRef.get();
-      const data = dailySnap.exists ? dailySnap.data() : {};
-
-      data[clean] = (data[clean] || 0) + 1;
-
-      await dailyRef.set(data, { merge: true });
+      localStorage.setItem("last_prompt_date", today);
     }
 
     document.getElementById("startupOverlay").style.display = "none";
-    await incrementSiteOpens();
   }
 </script>
- 
-<script>
-  // ✅ Force a Firestore write to confirm connection
-  db.collection("firstWriteTest").add({
-    message: "Hello Firestore!",
-    time: Date.now()
-  })
-  .then(() => {
-    document.getElementById("connectionBanner").style.background = "#7CFC00";
-    document.getElementById("connectionBanner").textContent = "✅ Connected to Firebase (Write Successful)";
-  })
-  .catch(() => {
-    document.getElementById("connectionBanner").style.background = "#ff6b6b";
-    document.getElementById("connectionBanner").textContent = "❌ Not Connected (Write Failed)";
-  });
-</script>
+
 </body>
 </html>
-
