@@ -2,48 +2,44 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Info</title>
+<title>Casino Hub – Global Stats</title>
 
 <style>
   body {
     background: #0b1924;
-    color: #fff;
+    color: white;
     font-family: system-ui, sans-serif;
     text-align: center;
     padding: 40px;
   }
 
-  .box {
-    background: #0a5a2c;
-    border: 6px solid #d4d4d4;
-    border-radius: 20px;
-    padding: 30px;
-    width: 500px;
-    margin: 0 auto;
-    box-shadow: 0 0 25px rgba(0,0,0,0.6);
-  }
-
   h1 {
     font-size: 42px;
     margin-bottom: 20px;
+    letter-spacing: 3px;
   }
 
-  p, li {
-    font-size: 22px;
-    margin-top: 10px;
+  #statsBox {
+    background: #102733;
+    padding: 25px;
+    border-radius: 14px;
+    max-width: 700px;
+    margin: 0 auto;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    font-size: 20px;
   }
 
-  ul {
-    list-style: none;
-    padding: 0;
-    margin-top: 20px;
+  .sectionTitle {
+    font-size: 26px;
+    margin-top: 25px;
+    margin-bottom: 10px;
+    text-decoration: underline;
   }
 
-  /* Admin button */
-  #adminBtn {
-    margin-top: 30px;
-    padding: 10px 25px;
-    font-size: 18px;
+  button {
+    margin-top: 35px;
+    padding: 12px 25px;
+    font-size: 20px;
     background: #f9d675;
     color: #111;
     border: none;
@@ -52,145 +48,121 @@
     box-shadow: 0 4px 0 #8a6220;
   }
 
-  #adminBtn:active {
+  button:active {
     transform: translateY(2px);
     box-shadow: 0 2px 0 #8a6220;
   }
-
-  /* Reset panel */
-  #resetPanel {
-    margin-top: 25px;
-    padding: 20px;
-    background: #143d20;
-    border: 3px solid #fff;
-    border-radius: 12px;
-    display: none;
-  }
-
-  #resetPanel button {
-    padding: 12px 30px;
-    font-size: 20px;
-    background: #ff6666;
-    color: #111;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    box-shadow: 0 4px 0 #993333;
-  }
-
-  #resetPanel button:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 #993333;
-  }
 </style>
 </head>
-
 <body>
 
-<div class="box">
-  <h1>Info Page</h1>
+<h1>Casino Hub – Global Stats</h1>
 
-  <p id="countText">Loading...</p>
-
-  <h2 style="margin-top:30px;">Top 3 Most Active Users Today</h2>
-  <ul id="topUsers"></ul>
-
-  <h2 style="margin-top:30px;">All Users</h2>
-  <ul id="userList"></ul>
-
-  <!-- ✅ Admin Login Button -->
-  <button id="adminBtn" onclick="adminLogin()">Admin Login</button>
-
-  <!-- ✅ Hidden Reset Panel -->
-  <div id="resetPanel">
-    <h3 style="margin-bottom:15px;">Admin Controls</h3>
-    <button onclick="resetEverything()">Reset Everything</button>
-  </div>
+<div id="statsBox">
+  Loading global stats...
 </div>
 
-<script>
-  /* ✅ Daily site opens */
-  const siteCount = Number(localStorage.getItem("site_open_count")) || 0;
-  document.getElementById("countText").textContent =
-    "The site has been opened " + siteCount + " times today.";
+<button onclick="resetStats()">Admin Reset</button>
 
-  /* ✅ Load user activity */
-  const activity = JSON.parse(localStorage.getItem("user_activity") || "{}");
-
-  const sorted = Object.entries(activity)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3);
-
-  const topList = document.getElementById("topUsers");
-
-  sorted.forEach(([name, count]) => {
-    const li = document.createElement("li");
-    li.textContent = `${name} — ${count} visits`;
-    topList.appendChild(li);
-  });
-
-  /* ✅ Load all users */
-  const users = JSON.parse(localStorage.getItem("users_list") || "[]");
-  const list = document.getElementById("userList");
-
-  users.forEach(name => {
-    const li = document.createElement("li");
-    li.textContent = name;
-    list.appendChild(li);
-  });
-
-  /* ✅ Admin Login */
-  function adminLogin() {
-    const code = prompt("Enter admin code:");
-
-    // ✅ Change this to whatever code you want
-    const correctCode = "1234";
-
-    if (code === correctCode) {
-      document.getElementById("resetPanel").style.display = "block";
-    } else {
-      alert("Incorrect code.");
-    }
-  }
-
-  /* ✅ Reset Everything */
-  function resetEverything() {
-    if (!confirm("Are you sure you want to reset ALL data?")) return;
-
-    localStorage.setItem("site_open_count", 0);
-    localStorage.setItem("users_list", JSON.stringify([]));
-    localStorage.setItem("user_activity", JSON.stringify({}));
-
-    alert("All data has been reset.");
-    location.reload();
-  }
-</script>
-<!-- Firebase SDK -->
+<!-- ✅ Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
 
 <script>
-  // Your Firebase config goes here
   const firebaseConfig = {
-    apiKey: "YOUR_KEY",
-    authDomain: "YOUR_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_BUCKET",
-    messagingSenderId: "YOUR_SENDER",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyD9OM6J2tTo5Hj2WCT13ztUPpP61s2XZ9c",
+    authDomain: "casinohub-9c9e1.firebaseapp.com",
+    projectId: "casinohub-9c9e1",
+    storageBucket: "casinohub-9c9e1.appspot.com",
+    messagingSenderId: "811062003530",
+    appId: "1:811062003530:web:5a93c6e17e7b27c1ad6b3b",
+    measurementId: "G-M63NEGYSYQ"
   };
 
-  // Initialize Firebase
   const app = firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
-</script>
-<script>
-  db.collection("test").add({
-    message: "Hello from GitHub Pages!"
-  });
+
+  function getTodayString() {
+    return new Date().toISOString().split("T")[0];
+  }
+
+  async function loadStats() {
+    const today = getTodayString();
+    const statsBox = document.getElementById("statsBox");
+
+    try {
+      // ✅ 1. Global site opens
+      const metaSnap = await db.collection("meta").doc("daily").get();
+      const siteOpens = metaSnap.exists ? metaSnap.data().siteOpenCount : 0;
+
+      // ✅ 2. Global user list
+      const usersSnap = await db.collection("users").get();
+      const userList = [];
+      usersSnap.forEach(doc => {
+        const d = doc.data();
+        userList.push(`${d.name} (visits: ${d.totalVisits || 0})`);
+      });
+
+      // ✅ 3. Daily activity (Top 3)
+      const dailySnap = await db.collection("dailyActivity").doc(today).get();
+      let activity = dailySnap.exists ? dailySnap.data() : {};
+
+      const topUsers = Object.entries(activity)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3);
+
+      // ✅ Render everything
+      statsBox.innerHTML = `
+        <div class="sectionTitle">Global Site Opens Today</div>
+        <div>${siteOpens}</div>
+
+        <div class="sectionTitle">Global Users (All Time)</div>
+        <div>${userList.length}</div>
+
+        <div style="margin-top:10px; font-size:18px;">
+          ${userList.join("<br>")}
+        </div>
+
+        <div class="sectionTitle">Top 3 Users Today</div>
+        <div>
+          ${
+            topUsers.length === 0
+              ? "No activity yet today."
+              : topUsers.map(([name, count]) => `${name} (${count})`).join("<br>")
+          }
+        </div>
+      `;
+    } catch (err) {
+      statsBox.innerHTML = "Error loading stats.";
+      console.error(err);
+    }
+  }
+
+  async function resetStats() {
+    if (!confirm("Reset ALL global stats?")) return;
+
+    try {
+      // ✅ Clear meta
+      await db.collection("meta").doc("daily").delete();
+
+      // ✅ Clear users
+      const users = await db.collection("users").get();
+      users.forEach(doc => doc.ref.delete());
+
+      // ✅ Clear daily activity
+      const daily = await db.collection("dailyActivity").get();
+      daily.forEach(doc => doc.ref.delete());
+
+      alert("Global stats reset.");
+      loadStats();
+    } catch (err) {
+      alert("Error resetting stats.");
+      console.error(err);
+    }
+  }
+
+  loadStats();
 </script>
 
 </body>
 </html>
-
-
