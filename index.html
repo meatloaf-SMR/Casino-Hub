@@ -244,13 +244,13 @@
 
 <script>
   const firebaseConfig = {
-   apiKey: "AIzaSyD9OM6J2tTo5Hj2WCT13ztUPpP61s2XZ9c",
-authDomain: "casinohub-9c9e1.firebaseapp.com",
-projectId: "casinohub-9c9e1",
-storageBucket: "casinohub-9c9e1.appspot.com",
-messagingSenderId: "811062003530",
-appId: "1:811062003530:web:5a93c6e17e7b27c1ad6b3b",
-measurementId: "G-M63NEGYSYQ"
+    apiKey: "AIzaSyD9OM6J2tTo5Hj2WCT13ztUPpP61s2XZ9c",
+    authDomain: "casinohub-9c9e1.firebaseapp.com",
+    projectId: "casinohub-9c9e1",
+    storageBucket: "casinohub-9c9e1.appspot.com",
+    messagingSenderId: "811062003530",
+    appId: "1:811062003530:web:5a93c6e17e7b27c1ad6b3b",
+    measurementId: "G-M63NEGYSYQ"
   };
 
   const app = firebase.initializeApp(firebaseConfig);
@@ -258,11 +258,12 @@ measurementId: "G-M63NEGYSYQ"
 </script>
 
 <script>
+  /* ✅ Connection Test */
   async function testConnection() {
     const banner = document.getElementById("connectionBanner");
 
     try {
-      await db.collection("connectionTest").add({
+      await db.collection("connectionTest_index").add({
         time: Date.now(),
         status: "ok"
       });
@@ -343,4 +344,3 @@ measurementId: "G-M63NEGYSYQ"
 
 </body>
 </html>
-
