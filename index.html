@@ -26,7 +26,7 @@
     margin-bottom: 30px;
   }
 
-  /* ✅ Responsive grid that prevents T-shaped layouts */
+  /* ✅ Responsive grid */
   .games {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -78,7 +78,7 @@
     box-shadow: 0 2px 0 #8a6220;
   }
 
-  /* ✅ Ensures iframe is visible and loads games */
+  /* ✅ Game iframe */
   #gameFrame {
     width: 100%;
     height: 700px;
@@ -88,10 +88,55 @@
     box-shadow: 0 10px 30px rgba(0,0,0,0.6);
     display: block;
   }
+
+  /* ✅ Startup Overlay */
+  #startupOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    color: white;
+    text-align: center;
+  }
+
+  #startupOverlay h2 {
+    font-size: 36px;
+    margin-bottom: 20px;
+  }
+
+  #startupOverlay button {
+    padding: 15px 40px;
+    font-size: 22px;
+    margin: 10px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+  }
+
+  #studentBtn {
+    background: #f9d675;
+    color: #111;
+  }
+
+  #teacherBtn {
+    background: #f66;
+    color: #111;
+  }
 </style>
 
 </head>
 <body>
+
+<!-- ✅ Startup Gate -->
+<div id="startupOverlay">
+  <h2>Are you a student or a teacher?</h2>
+  <button id="studentBtn" onclick="startSite()">Student</button>
+  <button id="teacherBtn" onclick="closeSite()">Teacher</button>
+</div>
 
 <h1>Casino Game Hub</h1>
 
@@ -132,35 +177,33 @@
     <p>Classic 3‑reel fruit machine.</p>
     <button class="btn" onclick="openGame('slot_machine.html')">Play</button>
   </div>
- 
-<div class="card">
-  <h2>Craps</h2>
-  <p>Classic dice table.</p>
-  <button class="btn" onclick="openGame('craps.html')">Play</button>
-</div>
- 
- <div class="card">
-  <h2>Higher or Lower</h2>
-  <p>Guess the next roll.</p>
-  <button class="btn" onclick="openGame('higher_lower.html')">Play</button>
-</div>
 
   <div class="card">
     <h2>Tutorial</h2>
     <p>Learn how to play.</p>
     <button class="btn" onclick="openGame('tutorial.html')">Play</button>
   </div>
- 
- <div class="card">
-  <h2>Info</h2>
-  <p>Daily page view counter.</p>
-  <button class="btn" onclick="openGame('info.html')">Open</button>
+
+  <div class="card">
+    <h2>Craps</h2>
+    <p>Classic dice table.</p>
+    <button class="btn" onclick="openGame('craps.html')">Play</button>
+  </div>
+
+  <div class="card">
+    <h2>Higher or Lower</h2>
+    <p>Guess the next roll.</p>
+    <button class="btn" onclick="openGame('higher_lower.html')">Play</button>
+  </div>
+
+  <div class="card">
+    <h2>Info</h2>
+    <p>Daily page view counter.</p>
+    <button class="btn" onclick="openGame('info.html')">Open</button>
+  </div>
+
 </div>
 
-
-</div>
-
-<!-- ✅ The iframe MUST exist before the script runs -->
 <iframe id="gameFrame"></iframe>
 
 <script>
@@ -168,16 +211,20 @@
     const frame = document.getElementById("gameFrame");
     frame.src = file;
 
-    // ✅ Smooth scroll AFTER the iframe loads
     setTimeout(() => {
       frame.scrollIntoView({ behavior: "smooth" });
     }, 150);
+  }
+
+  /* ✅ Startup Gate Logic */
+  function startSite() {
+    document.getElementById("startupOverlay").style.display = "none";
+  }
+
+  function closeSite() {
+    window.location.href = "about:blank";
   }
 </script>
 
 </body>
 </html>
-
-
-
-
