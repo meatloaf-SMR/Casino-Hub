@@ -38,6 +38,50 @@
     padding: 0;
     margin-top: 20px;
   }
+
+  /* Admin button */
+  #adminBtn {
+    margin-top: 30px;
+    padding: 10px 25px;
+    font-size: 18px;
+    background: #f9d675;
+    color: #111;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #8a6220;
+  }
+
+  #adminBtn:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #8a6220;
+  }
+
+  /* Reset panel */
+  #resetPanel {
+    margin-top: 25px;
+    padding: 20px;
+    background: #143d20;
+    border: 3px solid #fff;
+    border-radius: 12px;
+    display: none;
+  }
+
+  #resetPanel button {
+    padding: 12px 30px;
+    font-size: 20px;
+    background: #ff6666;
+    color: #111;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #993333;
+  }
+
+  #resetPanel button:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #993333;
+  }
 </style>
 </head>
 
@@ -53,6 +97,15 @@
 
   <h2 style="margin-top:30px;">All Users</h2>
   <ul id="userList"></ul>
+
+  <!-- ✅ Admin Login Button -->
+  <button id="adminBtn" onclick="adminLogin()">Admin Login</button>
+
+  <!-- ✅ Hidden Reset Panel -->
+  <div id="resetPanel">
+    <h3 style="margin-bottom:15px;">Admin Controls</h3>
+    <button onclick="resetEverything()">Reset Everything</button>
+  </div>
 </div>
 
 <script>
@@ -85,6 +138,32 @@
     li.textContent = name;
     list.appendChild(li);
   });
+
+  /* ✅ Admin Login */
+  function adminLogin() {
+    const code = prompt("Enter admin code:");
+
+    // ✅ Change this to whatever code you want
+    const correctCode = "1234";
+
+    if (code === correctCode) {
+      document.getElementById("resetPanel").style.display = "block";
+    } else {
+      alert("Incorrect code.");
+    }
+  }
+
+  /* ✅ Reset Everything */
+  function resetEverything() {
+    if (!confirm("Are you sure you want to reset ALL data?")) return;
+
+    localStorage.setItem("site_open_count", 0);
+    localStorage.setItem("users_list", JSON.stringify([]));
+    localStorage.setItem("user_activity", JSON.stringify({}));
+
+    alert("All data has been reset.");
+    location.reload();
+  }
 </script>
 
 </body>
