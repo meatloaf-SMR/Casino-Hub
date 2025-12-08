@@ -28,8 +28,14 @@
     margin-bottom: 20px;
   }
 
-  p {
-    font-size: 24px;
+  p, li {
+    font-size: 22px;
+    margin-top: 10px;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
     margin-top: 20px;
   }
 </style>
@@ -39,32 +45,40 @@
 
 <div class="box">
   <h1>Info Page</h1>
+
   <p id="countText">Loading...</p>
+
+  <h2 style="margin-top:30px;">Users</h2>
+  <ul id="userList"></ul>
 </div>
 
 <script>
-  // Get today's date in YYYY-MM-DD format
+  // ✅ Daily counter
   const today = new Date().toISOString().split("T")[0];
-
-  // Load stored values
   const savedDate = localStorage.getItem("info_last_date");
   let count = Number(localStorage.getItem("info_count")) || 0;
 
-  // Reset if it's a new day
   if (savedDate !== today) {
     count = 0;
   }
 
-  // Increment count
   count++;
 
-  // Save updated values
   localStorage.setItem("info_last_date", today);
   localStorage.setItem("info_count", count);
 
-  // Display
   document.getElementById("countText").textContent =
     "This page has been opened " + count + " times today.";
+
+  // ✅ User list
+  const users = JSON.parse(localStorage.getItem("users_list") || "[]");
+  const list = document.getElementById("userList");
+
+  users.forEach(name => {
+    const li = document.createElement("li");
+    li.textContent = name;
+    list.appendChild(li);
+  });
 </script>
 
 </body>
