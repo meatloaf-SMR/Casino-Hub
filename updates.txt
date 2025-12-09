@@ -1,1 +1,1 @@
-Welcome! New panic key update, press Esc to switch to the calculator! If you have new games to add or have found a bug, go to: https://github.com/meatloaf-SMR/Casino-Hub/issues
+Welcome! To use the panic key update, press Esc! If you have new games to add or have found a bug, go to: https://github.com/meatloaf-SMR/Casino-Hub/issues
