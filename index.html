@@ -19,7 +19,7 @@
     min-height: 100vh;
   }
 
-  /* ✅ Update Bar */
+  /* ✅ Bounce‑In Update Bar */
   #updateBar {
     width: 100%;
     background: #ffffff;
@@ -34,6 +34,28 @@
     display: flex;
     align-items: center;
     gap: 15px;
+
+    /* Animation */
+    animation: bounceIn 0.6s ease forwards;
+    transform: translateY(-120%);
+    opacity: 0;
+  }
+
+  @keyframes bounceIn {
+    0% {
+      transform: translateY(-120%);
+      opacity: 0;
+    }
+    60% {
+      transform: translateY(10%);
+      opacity: 1;
+    }
+    80% {
+      transform: translateY(-5%);
+    }
+    100% {
+      transform: translateY(0);
+    }
   }
 
   #updateText {
@@ -222,7 +244,7 @@
 </head>
 <body>
 
-<!-- ✅ Update Bar (always shows on load) -->
+<!-- ✅ Update Bar -->
 <div id="updateBar">
   <span id="updateText">Loading latest update…</span>
   <button id="closeUpdate">✕</button>
@@ -258,7 +280,7 @@
   </div>
 </div>
 
-<!-- ✅ Casino Content Wrapper -->
+<!-- ✅ Casino Content -->
 <div id="casinoContent">
 
   <!-- ✅ Startup Gate -->
@@ -349,7 +371,7 @@ fetch("./updates.txt")
     document.getElementById("updateText").textContent = "No updates available.";
   });
 
-/* ✅ Close button hides it only until refresh */
+/* ✅ Close button hides it until refresh */
 document.getElementById("closeUpdate").addEventListener("click", () => {
   document.getElementById("updateBar").style.display = "none";
 });
