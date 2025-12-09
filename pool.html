@@ -22,7 +22,7 @@
     }
 
     h1 {
-      margin-bottom: 10px;
+      margin-bottom: 6px;
     }
 
     #topBar {
@@ -30,6 +30,8 @@
       gap: 10px;
       align-items: center;
       margin-bottom: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
     }
 
     .modeBtn {
@@ -43,6 +45,11 @@
       box-shadow: 0 3px 0 #8a6220;
     }
 
+    .modeBtn.active {
+      background: #ffd34f;
+      box-shadow: 0 3px 0 #b07a1f;
+    }
+
     .modeBtn:active {
       transform: translateY(1px);
       box-shadow: 0 1px 0 #8a6220;
@@ -50,6 +57,11 @@
 
     #scoreDisplay {
       margin-left: 10px;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    #turnDisplay {
       font-size: 14px;
       opacity: 0.9;
     }
@@ -67,6 +79,8 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
     }
 
     #powerLabel {
@@ -87,9 +101,10 @@
   <h1>Pool</h1>
 
   <div id="topBar">
-    <button class="modeBtn" id="player1Btn">1 Player</button>
-    <button class="modeBtn" id="vsAiBtn" disabled>Vs AI (coming soon)</button>
+    <button class="modeBtn active" id="player1Btn">1 Player</button>
+    <button class="modeBtn" id="vsAiBtn">Vs AI</button>
     <span id="scoreDisplay">Sunk balls: 0</span>
+    <span id="turnDisplay">Turn: Player</span>
   </div>
 
   <canvas id="poolCanvas" width="800" height="400"></canvas>
@@ -97,7 +112,7 @@
   <div id="bottomBar">
     <span id="powerLabel">Shot power:</span>
     <input type="range" id="powerBar" min="10" max="60" value="30">
-    <span id="hint">Click and drag from cue ball to aim, release to shoot.</span>
+    <span id="hint">Click and drag from cue ball to aim (only on your turn).</span>
   </div>
 
   <script>
@@ -119,6 +134,15 @@
 
     const scoreDisplay = document.getElementById("scoreDisplay");
     const powerBar = document.getElementById("powerBar");
+    const turnDisplay = document.getElementById("turnDisplay");
+
+    const player1Btn = document.getElementById("player1Btn");
+    const vsAiBtn = document.getElementById("vsAiBtn");
+
+    // Modes and turns
+    let vsAI = false;
+    let currentTurn = "player"; // "player" or "ai"
+    let waitingForAIShot = false;
 
     // Pockets: 6 circular zones
     const POCKET_RADIUS = 18;
@@ -136,11 +160,9 @@
       sunkCount = 0;
       updateScore();
 
-      // Cue ball on left
       cueBall = createBall(150, height / 2, 0, 0, "white", true);
       balls.push(cueBall);
 
-      // Rack of balls on the right
       const startX = width - 200;
       const startY = height / 2;
       let rows = 5;
@@ -157,6 +179,10 @@
         }
         if (number > 15) break;
       }
+
+      currentTurn = "player";
+      waitingForAIShot = false;
+      updateTurnDisplay();
     }
 
     function createBall(x, y, vx, vy, color, isCue = false, number = null) {
@@ -164,16 +190,15 @@
     }
 
     function ballColor(num) {
-      // Simple mapping of some typical pool colors
       const colors = {
-        1: "#f6d000", // yellow
-        2: "#0033cc", // blue
-        3: "#cc3300", // red
-        4: "#550080", // purple
-        5: "#ff6600", // orange
-        6: "#006633", // green
-        7: "#660000", // maroon
-        8: "#000000", // black
+        1: "#f6d000",
+        2: "#0033cc",
+        3: "#cc3300",
+        4: "#550080",
+        5: "#ff6600",
+        6: "#006633",
+        7: "#660000",
+        8: "#000000",
         9: "#f6d000",
         10: "#0033cc",
         11: "#cc3300",
@@ -189,8 +214,17 @@
       scoreDisplay.textContent = `Sunk balls: ${sunkCount}`;
     }
 
-    // Input handling
+    function updateTurnDisplay() {
+      if (!vsAI) {
+        turnDisplay.textContent = "Turn: Player";
+      } else {
+        turnDisplay.textContent = currentTurn === "player" ? "Turn: Player" : "Turn: AI";
+      }
+    }
+
+    // Input handling – only allow when player's turn
     canvas.addEventListener("mousedown", (e) => {
+      if (vsAI && currentTurn !== "player") return;
       const rect = canvas.getBoundingClientRect();
       const mx = e.clientX - rect.left;
       const my = e.clientY - rect.top;
@@ -220,11 +254,17 @@
       const dy = mousePos.y - cueBall.y;
 
       const angle = Math.atan2(dy, dx);
-      const power = parseFloat(powerBar.value); // 10–60
+      const power = parseFloat(powerBar.value);
 
-      // Shoot opposite direction (pull back effect)
       cueBall.vx = -Math.cos(angle) * (power / 10);
       cueBall.vy = -Math.sin(angle) * (power / 10);
+
+      // If vs AI, after player's shot, AI will play once balls have stopped
+      if (vsAI) {
+        currentTurn = "ai";
+        updateTurnDisplay();
+        waitingForAIShot = true;
+      }
     });
 
     function allBallsStopped() {
@@ -232,7 +272,6 @@
     }
 
     function physicsStep() {
-      // Move
       balls.forEach(b => {
         if (b.sunk) return;
         b.x += b.vx;
@@ -245,7 +284,6 @@
           b.vy = 0;
         }
 
-        // Cushion collisions
         if (b.x - BALL_RADIUS < 0) {
           b.x = BALL_RADIUS;
           b.vx *= -1;
@@ -264,19 +302,16 @@
         }
       });
 
-      // Ball-ball collisions
       for (let i = 0; i < balls.length; i++) {
         for (let j = i + 1; j < balls.length; j++) {
           resolveCollision(balls[i], balls[j]);
         }
       }
 
-      // Pocket detection
       balls.forEach(b => {
         if (b.sunk) return;
         if (isInPocket(b)) {
           if (b.isCue) {
-            // Scratch: reset cue ball
             b.x = 150;
             b.y = height / 2;
             b.vx = 0;
@@ -290,6 +325,12 @@
           }
         }
       });
+
+      // Handle AI if it's its turn and balls have stopped
+      if (vsAI && currentTurn === "ai" && waitingForAIShot && allBallsStopped()) {
+        waitingForAIShot = false;
+        setTimeout(aiTakeShot, 600); // small delay so it feels like thinking
+      }
     }
 
     function isInPocket(ball) {
@@ -311,7 +352,6 @@
 
       if (dist === 0 || dist > BALL_RADIUS * 2) return;
 
-      // Overlap correction
       const overlap = BALL_RADIUS * 2 - dist;
       const nx = dx / dist;
       const ny = dy / dist;
@@ -321,14 +361,13 @@
       b2.x += nx * overlap / 2;
       b2.y += ny * overlap / 2;
 
-      // Relative velocity
       const dvx = b2.vx - b1.vx;
       const dvy = b2.vy - b1.vy;
       const relVel = dvx * nx + dvy * ny;
 
       if (relVel > 0) return;
 
-      const impulse = -relVel; // equal mass
+      const impulse = -relVel;
       const ix = impulse * nx;
       const iy = impulse * ny;
 
@@ -339,11 +378,9 @@
     }
 
     function drawTable() {
-      // Felt
       ctx.fillStyle = "#116b3a";
       ctx.fillRect(0, 0, width, height);
 
-      // Pockets (dark circles)
       ctx.fillStyle = "#111";
       for (const p of pockets) {
         ctx.beginPath();
@@ -363,7 +400,6 @@
         ctx.lineWidth = 1;
         ctx.stroke();
 
-        // Number (optional, small)
         if (!b.isCue && b.number != null) {
           ctx.fillStyle = "#fff";
           ctx.font = "10px system-ui";
@@ -399,15 +435,48 @@
       requestAnimationFrame(loop);
     }
 
-    // Mode buttons (AI placeholder)
-    document.getElementById("player1Btn").addEventListener("click", () => {
-      // Right now just resets the table
+    // Simple AI: pick a random remaining ball and shoot at it
+    function aiTakeShot() {
+      if (!vsAI) return;
+
+      const targets = balls.filter(b => !b.sunk && !b.isCue);
+      if (targets.length === 0) {
+        currentTurn = "player";
+        updateTurnDisplay();
+        return;
+      }
+
+      // Pick a random ball
+      const target = targets[Math.floor(Math.random() * targets.length)];
+
+      const dx = target.x - cueBall.x;
+      const dy = target.y - cueBall.y;
+      const angle = Math.atan2(dy, dx);
+
+      // Random-ish power so it feels less robotic
+      const power = 20 + Math.random() * 30; // between 20 and 50
+
+      cueBall.vx = Math.cos(angle) * (power / 10);
+      cueBall.vy = Math.sin(angle) * (power / 10);
+
+      // After AI shot, player goes next once balls stop
+      currentTurn = "player";
+      updateTurnDisplay();
+    }
+
+    // Mode buttons
+    player1Btn.addEventListener("click", () => {
+      vsAI = false;
+      player1Btn.classList.add("active");
+      vsAiBtn.classList.remove("active");
       resetTable();
     });
 
-    document.getElementById("vsAiBtn").addEventListener("click", () => {
-      // Placeholder: we’ll wire AI logic later
-      alert("AI mode coming soon! For now, use 1 Player.");
+    vsAiBtn.addEventListener("click", () => {
+      vsAI = true;
+      player1Btn.classList.remove("active");
+      vsAiBtn.classList.add("active");
+      resetTable();
     });
 
     // Init
