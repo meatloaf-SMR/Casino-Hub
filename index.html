@@ -222,7 +222,7 @@
 </head>
 <body>
 
-<!-- ✅ Update Bar -->
+<!-- ✅ Update Bar (always shows on load) -->
 <div id="updateBar">
   <span id="updateText">Loading latest update…</span>
   <button id="closeUpdate">✕</button>
@@ -321,6 +321,12 @@
     </div>
 
     <div class="card">
+      <h2>Mini Golf</h2>
+      <p>Endless procedural golf.</p>
+      <button class="btn" onclick="openGame('mini_golf.html')">Play</button>
+    </div>
+
+    <div class="card">
       <h2>Info</h2>
       <p>Your local stats.</p>
       <button class="btn" onclick="openGame('info.html')">Open</button>
@@ -333,82 +339,67 @@
 </div>
 
 <script>
-  /* ✅ Load update text from updates.txt */
-  if (!localStorage.getItem("updateDismissed")) {
-    fetch("./updates.txt")
-      .then(response => response.text())
-      .then(text => {
-        document.getElementById("updateText").textContent = text.trim();
-      })
-      .catch(() => {
-        document.getElementById("updateText").textContent = "No updates available.";
-      });
-  } else {
-    document.getElementById("updateBar").style.display = "none";
-  }
-
-  /* ✅ Close button logic */
-  document.getElementById("closeUpdate").addEventListener("click", () => {
-    document.getElementById("updateBar").style.display = "none";
-    localStorage.setItem("updateDismissed", "true");
+/* ✅ Always show update bar on load */
+fetch("./updates.txt")
+  .then(response => response.text())
+  .then(text => {
+    document.getElementById("updateText").textContent = text.trim();
+  })
+  .catch(() => {
+    document.getElementById("updateText").textContent = "No updates available.";
   });
 
-  function openGame(file) {
-    const frame = document.getElementById("gameFrame");
-    frame.src = file;
+/* ✅ Close button hides it only until refresh */
+document.getElementById("closeUpdate").addEventListener("click", () => {
+  document.getElementById("updateBar").style.display = "none";
+});
 
-    setTimeout(() => {
-      frame.scrollIntoView({ behavior: "smooth" });
-    }, 150);
+/* ✅ Game loading */
+function openGame(file) {
+  const frame = document.getElementById("gameFrame");
+  frame.src = file;
+
+  setTimeout(() => {
+    frame.scrollIntoView({ behavior: "smooth" });
+  }, 150);
+}
+
+/* ✅ Startup Gate */
+function closeSite() {
+  window.location.href = "about:blank";
+}
+
+function startSite() {
+  document.getElementById("startupOverlay").style.display = "none";
+}
+
+/* ✅ Panic Key (Esc) */
+document.addEventListener("keydown", function(e) {
+  if (e.key === "Escape") {
+    document.getElementById("casinoContent").style.display = "none";
+    document.getElementById("calculatorScreen").style.display = "block";
+    history.pushState({}, "", "/calculator");
   }
+});
 
-  function closeSite() {
-    window.location.href = "about:blank";
+/* ✅ Calculator Logic */
+function pressCalc(val) {
+  document.getElementById("calcDisplay").value += val;
+}
+
+function clearCalc() {
+  document.getElementById("calcDisplay").value = "";
+}
+
+function calculate() {
+  try {
+    const result = eval(document.getElementById("calcDisplay").value);
+    document.getElementById("calcDisplay").value = result;
+  } catch {
+    document.getElementById("calcDisplay").value = "Error";
   }
-
-  function startSite() {
-    const today = new Date().toISOString().split("T")[0];
-    const lastPrompt = localStorage.getItem("last_prompt_date");
-
-    if (lastPrompt !== today) {
-      const name = prompt("Enter your name:");
-      if (name && name.trim() !== "") {
-        localStorage.setItem("last_user_name", name.trim());
-      }
-      localStorage.setItem("last_prompt_date", today);
-    }
-
-    document.getElementById("startupOverlay").style.display = "none";
-  }
-
-  /* ✅ Panic Key (Esc) + URL Change */
-  document.addEventListener("keydown", function(e) {
-    if (e.key === "Escape") {
-      document.getElementById("casinoContent").style.display = "none";
-      document.getElementById("calculatorScreen").style.display = "block";
-      history.pushState({}, "", "/calculator");
-    }
-  });
-
-  /* ✅ Calculator Logic */
-  function pressCalc(val) {
-    document.getElementById("calcDisplay").value += val;
-  }
-
-  function clearCalc() {
-    document.getElementById("calcDisplay").value = "";
-  }
-
-  function calculate() {
-    try {
-      const result = eval(document.getElementById("calcDisplay").value);
-      document.getElementById("calcDisplay").value = result;
-    } catch {
-      document.getElementById("calcDisplay").value = "Error";
-    }
-  }
+}
 </script>
 
 </body>
 </html>
-
