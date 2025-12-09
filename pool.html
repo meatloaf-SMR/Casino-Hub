@@ -63,24 +63,8 @@
       display: block;
     }
 
-    #bottomBar {
-      margin-top: 12px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    #powerLabel {
-      font-size: 14px;
-    }
-
-    #powerBar {
-      width: 200px;
-    }
-
     #hint {
+      margin-top: 12px;
       font-size: 13px;
       opacity: 0.8;
     }
@@ -98,11 +82,7 @@
 
   <canvas id="poolCanvas" width="800" height="400"></canvas>
 
-  <div id="bottomBar">
-    <span id="powerLabel">Shot power:</span>
-    <input type="range" id="powerBar" min="10" max="60" value="30">
-    <span id="hint">Click and drag from cue ball to aim (only on your turn).</span>
-  </div>
+  <span id="hint">Click and drag from the cue ball to pull back and shoot.</span>
 
   <script>
     const canvas = document.getElementById("poolCanvas");
@@ -122,7 +102,6 @@
     let sunkCount = 0;
 
     const scoreDisplay = document.getElementById("scoreDisplay");
-    const powerBar = document.getElementById("powerBar");
     const turnDisplay = document.getElementById("turnDisplay");
 
     const player1Btn = document.getElementById("player1Btn");
@@ -207,6 +186,7 @@
       };
     }
 
+    // ✅ Pull‑back aiming
     canvas.addEventListener("mousedown", (e) => {
       if (vsAI && currentTurn !== "player") return;
 
@@ -227,7 +207,7 @@
       mousePos = getMousePos(e);
     });
 
-    canvas.addEventListener("mouseup", (e) => {
+    canvas.addEventListener("mouseup", () => {
       if (!isAiming) return;
       isAiming = false;
 
@@ -235,10 +215,14 @@
       const dy = mousePos.y - cueBall.y;
 
       const angle = Math.atan2(dy, dx);
-      const power = parseFloat(powerBar.value);
 
-      cueBall.vx = -Math.cos(angle) * (power / 10);
-      cueBall.vy = -Math.sin(angle) * (power / 10);
+      // ✅ Pull‑back distance = power
+      const pullBack = Math.hypot(dx, dy);
+      const maxPull = 150;
+      const power = Math.min(pullBack, maxPull) / 10;
+
+      cueBall.vx = -Math.cos(angle) * power;
+      cueBall.vy = -Math.sin(angle) * power;
 
       if (vsAI) {
         currentTurn = "ai";
@@ -373,13 +357,19 @@
     function drawAimLine() {
       if (!isAiming || !allBallsStopped()) return;
 
-      ctx.strokeStyle = "rgba(255,255,255,0.7)";
+      const dx = mousePos.x - cueBall.x;
+      const dy = mousePos.y - cueBall.y;
+      const pullBack = Math.hypot(dx, dy);
+
+      ctx.strokeStyle = `rgba(255,255,255,${Math.min(1, pullBack / 120)})`;
       ctx.lineWidth = 2;
       ctx.setLineDash([10, 6]);
+
       ctx.beginPath();
       ctx.moveTo(cueBall.x, cueBall.y);
       ctx.lineTo(mousePos.x, mousePos.y);
       ctx.stroke();
+
       ctx.setLineDash([]);
     }
 
