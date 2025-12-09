@@ -19,7 +19,59 @@
     min-height: 100vh;
   }
 
-  /* ✅ Slide‑In Update Bar */
+  /* ✅ FULL WHITE LOCK SCREEN */
+  #lockOverlay {
+    position: fixed;
+    inset: 0;
+    background: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999999; /* above everything */
+  }
+
+  #lockBox {
+    text-align: center;
+    width: 300px;
+  }
+
+  #lockBox h2 {
+    color: #111;
+    margin-bottom: 20px;
+    font-size: 26px;
+  }
+
+  #codeInput {
+    width: 100%;
+    padding: 12px;
+    font-size: 18px;
+    border: 2px solid #ccc;
+    border-radius: 6px;
+  }
+
+  #unlockBtn {
+    width: 100%;
+    margin-top: 15px;
+    padding: 12px;
+    font-size: 18px;
+    background: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  #unlockBtn:hover {
+    background: #43a047;
+  }
+
+  #codeError {
+    margin-top: 10px;
+    color: red;
+    font-size: 16px;
+  }
+
+  /* ✅ Update Bar */
   #updateBar {
     width: 100%;
     background: #ffffff;
@@ -31,10 +83,9 @@
     position: sticky;
     top: 0;
     z-index: 9998;
-    display: none; /* hidden until startup gate closes */
+    display: none;
     align-items: center;
     gap: 15px;
-
     transform: translateY(-100%);
     opacity: 0;
     animation: slideDown 0.5s ease forwards;
@@ -131,45 +182,7 @@
     display: block;
   }
 
-  /* ✅ Startup Gate */
-  #startupOverlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.92);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-    color: white;
-    text-align: center;
-  }
-
-  #startupOverlay h2 {
-    font-size: 36px;
-    margin-bottom: 20px;
-  }
-
-  #startupOverlay button {
-    padding: 15px 40px;
-    font-size: 22px;
-    margin: 10px;
-    border-radius: 10px;
-    border: none;
-    cursor: pointer;
-  }
-
-  #studentBtn {
-    background: #f9d675;
-    color: #111;
-  }
-
-  #teacherBtn {
-    background: #f66;
-    color: #111;
-  }
-
-  /* ✅ Calculator Screen */
+  /* ✅ Calculator Panic Screen */
   #calculatorScreen {
     display: none;
     background: #f4f4f4;
@@ -177,7 +190,7 @@
     position: fixed;
     inset: 0;
     padding: 40px;
-    z-index: 99999;
+    z-index: 9999999;
     overflow: auto;
   }
 
@@ -202,7 +215,6 @@
     background: #fefefe;
   }
 
-  /* ✅ Square Calculator Buttons */
   .calcGrid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -215,7 +227,7 @@
     font-size: 20px;
     border: none;
     background: #e0e0e0;
-    border-radius: 0; /* square */
+    border-radius: 0;
     cursor: pointer;
     transition: background 0.2s;
   }
@@ -235,6 +247,16 @@
 
 </head>
 <body>
+
+<!-- ✅ FULL WHITE LOCK SCREEN -->
+<div id="lockOverlay">
+  <div id="lockBox">
+    <h2>Enter Code</h2>
+    <input id="codeInput" type="password" placeholder="Enter code">
+    <button id="unlockBtn" onclick="unlockHub()">Unlock</button>
+    <p id="codeError"></p>
+  </div>
+</div>
 
 <!-- ✅ Update Bar -->
 <div id="updateBar">
@@ -273,88 +295,95 @@
   </div>
 </div>
 
-<!-- ✅ Casino Content -->
-<div id="casinoContent">
+<h1>Casino Game Hub</h1>
 
-  <!-- ✅ Startup Gate -->
-  <div id="startupOverlay">
-    <h2>Are you a student or a teacher?</h2>
-    <button id="studentBtn" onclick="startSite()">Student</button>
-    <button id="teacherBtn" onclick="closeSite()">Teacher</button>
+<div class="games">
+
+  <div class="card">
+    <h2>Blackjack</h2>
+    <p>Beat the dealer to 21.</p>
+    <button class="btn" onclick="openGame('blackjack.html')">Play</button>
   </div>
 
-  <h1>Casino Game Hub</h1>
-
-  <div class="games">
-
-    <div class="card">
-      <h2>Blackjack</h2>
-      <p>Beat the dealer to 21.</p>
-      <button class="btn" onclick="openGame('blackjack.html')">Play</button>
-    </div>
-
-    <div class="card">
-      <h2>Roulette</h2>
-      <p>Bet on red, black, or numbers.</p>
-      <button class="btn" onclick="openGame('roulette.html')">Play</button>
-    </div>
-
-    <div class="card">
-      <h2>Poker</h2>
-      <p>Classic Texas Hold'em.</p>
-      <button class="btn" onclick="openGame('poker.html')">Play</button>
-    </div>
-
-    <div class="card">
-      <h2>Pool</h2>
-      <p>8‑ball billiards physics.</p>
-      <button class="btn" onclick="openGame('pool.html')">Play</button>
-    </div>
-
-    <div class="card">
-      <h2>Air Hockey</h2>
-      <p>1P/2P fast arcade action.</p>
-      <button class="btn" onclick="openGame('air_hockey.html')">Play</button>
-    </div>
-
-    <div class="card">
-      <h2>Slot Machine</h2>
-      <p>Classic 3‑reel fruit machine.</p>
-      <button class="btn" onclick="openGame('slot_machine.html')">Play</button>
-    </div>
-
-    <div class="card">
-      <h2>Craps</h2>
-      <p>Classic dice table.</p>
-      <button class="btn" onclick="openGame('craps.html')">Play</button>
-    </div>
-
-    <div class="card">
-      <h2>Higher or Lower</h2>
-      <p>Guess the next roll.</p>
-      <button class="btn" onclick="openGame('higher_lower.html')">Play</button>
-    </div>
-
-    <div class="card">
-      <h2>Mini Golf</h2>
-      <p>Endless procedural golf.</p>
-      <button class="btn" onclick="openGame('mini_golf.html')">Play</button>
-    </div>
-
-    <div class="card">
-      <h2>Info</h2>
-      <p>Your local stats.</p>
-      <button class="btn" onclick="openGame('info.html')">Open</button>
-    </div>
-
+  <div class="card">
+    <h2>Roulette</h2>
+    <p>Bet on red, black, or numbers.</p>
+    <button class="btn" onclick="openGame('roulette.html')">Play</button>
   </div>
 
-  <iframe id="gameFrame"></iframe>
+  <div class="card">
+    <h2>Poker</h2>
+    <p>Classic Texas Hold'em.</p>
+    <button class="btn" onclick="openGame('poker.html')">Play</button>
+  </div>
+
+  <div class="card">
+    <h2>Pool</h2>
+    <p>8‑ball billiards physics.</p>
+    <button class="btn" onclick="openGame('pool.html')">Play</button>
+  </div>
+
+  <div class="card">
+    <h2>Air Hockey</h2>
+    <p>1P/2P fast arcade action.</p>
+    <button class="btn" onclick="openGame('air_hockey.html')">Play</button>
+  </div>
+
+  <div class="card">
+    <h2>Slot Machine</h2>
+    <p>Classic 3‑reel fruit machine.</p>
+    <button class="btn" onclick="openGame('slot_machine.html')">Play</button>
+  </div>
+
+  <div class="card">
+    <h2>Craps</h2>
+    <p>Classic dice table.</p>
+    <button class="btn" onclick="openGame('craps.html')">Play</button>
+  </div>
+
+  <div class="card">
+    <h2>Higher or Lower</h2>
+    <p>Guess the next roll.</p>
+    <button class="btn" onclick="openGame('higher_lower.html')">Play</button>
+  </div>
+
+  <div class="card">
+    <h2>Mini Golf</h2>
+    <p>Endless procedural golf.</p>
+    <button class="btn" onclick="openGame('mini_golf.html')">Play</button>
+  </div>
+
+  <div class="card">
+    <h2>Info</h2>
+    <p>Your local stats.</p>
+    <button class="btn" onclick="openGame('info.html')">Open</button>
+  </div>
 
 </div>
 
+<iframe id="gameFrame"></iframe>
+
 <script>
-/* ✅ Load update text */
+/* ✅ Secret Code (change anytime) */
+let secretCode = "smr";
+
+/* ✅ Unlock Function */
+function unlockHub() {
+  const input = document.getElementById("codeInput").value.trim().toLowerCase();
+
+  if (input === secretCode.toLowerCase()) {
+    document.getElementById("lockOverlay").style.display = "none";
+  } else {
+    document.getElementById("codeError").textContent = "Invalid code";
+  }
+}
+
+/* ✅ Enter key unlock */
+document.getElementById("codeInput").addEventListener("keydown", function(e) {
+  if (e.key === "Enter") unlockHub();
+});
+
+/* ✅ Update text */
 fetch("./updates.txt")
   .then(r => r.text())
   .then(t => document.getElementById("updateText").textContent = t.trim())
@@ -372,25 +401,9 @@ function openGame(file) {
   setTimeout(() => frame.scrollIntoView({ behavior: "smooth" }), 150);
 }
 
-/* ✅ Startup Gate */
-function closeSite() {
-  window.location.href = "about:blank";
-}
-
-function startSite() {
-  document.getElementById("startupOverlay").style.display = "none";
-
-  /* ✅ Show update bar after 300ms */
-  setTimeout(() => {
-    const bar = document.getElementById("updateBar");
-    bar.style.display = "flex";
-  }, 300);
-}
-
 /* ✅ Panic Key */
 document.addEventListener("keydown", e => {
   if (e.key === "Escape") {
-    document.getElementById("casinoContent").style.display = "none";
     document.getElementById("calculatorScreen").style.display = "block";
     history.pushState({}, "", "/calculator");
   }
