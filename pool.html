@@ -50,27 +50,16 @@
       box-shadow: 0 3px 0 #b07a1f;
     }
 
-    .modeBtn:active {
-      transform: translateY(1px);
-      box-shadow: 0 1px 0 #8a6220;
-    }
-
-    #scoreDisplay {
-      margin-left: 10px;
-      font-size: 14px;
-      opacity: 0.9;
-    }
-
-    #turnDisplay {
+    #scoreDisplay, #turnDisplay {
       font-size: 14px;
       opacity: 0.9;
     }
 
     #poolCanvas {
-      background: #116b3a; /* felt */
+      background: #116b3a;
       border-radius: 16px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.6);
-      border: 18px solid #5b3a1a; /* wood rails */
+      border: 18px solid #5b3a1a;
       display: block;
     }
 
@@ -139,12 +128,10 @@
     const player1Btn = document.getElementById("player1Btn");
     const vsAiBtn = document.getElementById("vsAiBtn");
 
-    // Modes and turns
     let vsAI = false;
-    let currentTurn = "player"; // "player" or "ai"
+    let currentTurn = "player";
     let waitingForAIShot = false;
 
-    // Pockets: 6 circular zones
     const POCKET_RADIUS = 18;
     const pockets = [
       { x: 0, y: 0 },
@@ -191,21 +178,10 @@
 
     function ballColor(num) {
       const colors = {
-        1: "#f6d000",
-        2: "#0033cc",
-        3: "#cc3300",
-        4: "#550080",
-        5: "#ff6600",
-        6: "#006633",
-        7: "#660000",
-        8: "#000000",
-        9: "#f6d000",
-        10: "#0033cc",
-        11: "#cc3300",
-        12: "#550080",
-        13: "#ff6600",
-        14: "#006633",
-        15: "#660000"
+        1: "#f6d000", 2: "#0033cc", 3: "#cc3300", 4: "#550080",
+        5: "#ff6600", 6: "#006633", 7: "#660000", 8: "#000000",
+        9: "#f6d000", 10: "#0033cc", 11: "#cc3300", 12: "#550080",
+        13: "#ff6600", 14: "#006633", 15: "#660000"
       };
       return colors[num] || "#cccccc";
     }
@@ -215,19 +191,26 @@
     }
 
     function updateTurnDisplay() {
-      if (!vsAI) {
-        turnDisplay.textContent = "Turn: Player";
-      } else {
-        turnDisplay.textContent = currentTurn === "player" ? "Turn: Player" : "Turn: AI";
-      }
+      turnDisplay.textContent = vsAI
+        ? (currentTurn === "player" ? "Turn: Player" : "Turn: AI")
+        : "Turn: Player";
     }
 
-    // Input handling – only allow when player's turn
+    // ✅ FIXED MOUSE SCALING
+    function getMousePos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      return {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY
+      };
+    }
+
     canvas.addEventListener("mousedown", (e) => {
       if (vsAI && currentTurn !== "player") return;
-      const rect = canvas.getBoundingClientRect();
-      const mx = e.clientX - rect.left;
-      const my = e.clientY - rect.top;
+
+      const { x: mx, y: my } = getMousePos(e);
 
       const dx = mx - cueBall.x;
       const dy = my - cueBall.y;
@@ -241,9 +224,7 @@
 
     canvas.addEventListener("mousemove", (e) => {
       if (!isAiming) return;
-      const rect = canvas.getBoundingClientRect();
-      mousePos.x = e.clientX - rect.left;
-      mousePos.y = e.clientY - rect.top;
+      mousePos = getMousePos(e);
     });
 
     canvas.addEventListener("mouseup", (e) => {
@@ -259,7 +240,6 @@
       cueBall.vx = -Math.cos(angle) * (power / 10);
       cueBall.vy = -Math.sin(angle) * (power / 10);
 
-      // If vs AI, after player's shot, AI will play once balls have stopped
       if (vsAI) {
         currentTurn = "ai";
         updateTurnDisplay();
@@ -284,22 +264,10 @@
           b.vy = 0;
         }
 
-        if (b.x - BALL_RADIUS < 0) {
-          b.x = BALL_RADIUS;
-          b.vx *= -1;
-        }
-        if (b.x + BALL_RADIUS > width) {
-          b.x = width - BALL_RADIUS;
-          b.vx *= -1;
-        }
-        if (b.y - BALL_RADIUS < 0) {
-          b.y = BALL_RADIUS;
-          b.vy *= -1;
-        }
-        if (b.y + BALL_RADIUS > height) {
-          b.y = height - BALL_RADIUS;
-          b.vy *= -1;
-        }
+        if (b.x - BALL_RADIUS < 0) { b.x = BALL_RADIUS; b.vx *= -1; }
+        if (b.x + BALL_RADIUS > width) { b.x = width - BALL_RADIUS; b.vx *= -1; }
+        if (b.y - BALL_RADIUS < 0) { b.y = BALL_RADIUS; b.vy *= -1; }
+        if (b.y + BALL_RADIUS > height) { b.y = height - BALL_RADIUS; b.vy *= -1; }
       });
 
       for (let i = 0; i < balls.length; i++) {
@@ -326,21 +294,14 @@
         }
       });
 
-      // Handle AI if it's its turn and balls have stopped
       if (vsAI && currentTurn === "ai" && waitingForAIShot && allBallsStopped()) {
         waitingForAIShot = false;
-        setTimeout(aiTakeShot, 600); // small delay so it feels like thinking
+        setTimeout(aiTakeShot, 600);
       }
     }
 
     function isInPocket(ball) {
-      for (const p of pockets) {
-        const dx = ball.x - p.x;
-        const dy = ball.y - p.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist < POCKET_RADIUS) return true;
-      }
-      return false;
+      return pockets.some(p => Math.hypot(ball.x - p.x, ball.y - p.y) < POCKET_RADIUS);
     }
 
     function resolveCollision(b1, b2) {
@@ -382,11 +343,11 @@
       ctx.fillRect(0, 0, width, height);
 
       ctx.fillStyle = "#111";
-      for (const p of pockets) {
+      pockets.forEach(p => {
         ctx.beginPath();
         ctx.arc(p.x, p.y, POCKET_RADIUS, 0, Math.PI * 2);
         ctx.fill();
-      }
+      });
     }
 
     function drawBalls() {
@@ -397,7 +358,6 @@
         ctx.fillStyle = b.color;
         ctx.fill();
         ctx.strokeStyle = "#000";
-        ctx.lineWidth = 1;
         ctx.stroke();
 
         if (!b.isCue && b.number != null) {
@@ -405,14 +365,13 @@
           ctx.font = "10px system-ui";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
-          ctx.fillText(b.number.toString(), b.x, b.y);
+          ctx.fillText(b.number, b.x, b.y);
         }
       });
     }
 
     function drawAimLine() {
-      if (!isAiming) return;
-      if (!allBallsStopped()) return;
+      if (!isAiming || !allBallsStopped()) return;
 
       ctx.strokeStyle = "rgba(255,255,255,0.7)";
       ctx.lineWidth = 2;
@@ -426,19 +385,14 @@
 
     function loop() {
       physicsStep();
-
       ctx.clearRect(0, 0, width, height);
       drawTable();
       drawBalls();
       drawAimLine();
-
       requestAnimationFrame(loop);
     }
 
-    // Simple AI: pick a random remaining ball and shoot at it
     function aiTakeShot() {
-      if (!vsAI) return;
-
       const targets = balls.filter(b => !b.sunk && !b.isCue);
       if (targets.length === 0) {
         currentTurn = "player";
@@ -446,25 +400,20 @@
         return;
       }
 
-      // Pick a random ball
       const target = targets[Math.floor(Math.random() * targets.length)];
-
       const dx = target.x - cueBall.x;
       const dy = target.y - cueBall.y;
       const angle = Math.atan2(dy, dx);
 
-      // Random-ish power so it feels less robotic
-      const power = 20 + Math.random() * 30; // between 20 and 50
+      const power = 20 + Math.random() * 30;
 
       cueBall.vx = Math.cos(angle) * (power / 10);
       cueBall.vy = Math.sin(angle) * (power / 10);
 
-      // After AI shot, player goes next once balls stop
       currentTurn = "player";
       updateTurnDisplay();
     }
 
-    // Mode buttons
     player1Btn.addEventListener("click", () => {
       vsAI = false;
       player1Btn.classList.add("active");
@@ -479,7 +428,6 @@
       resetTable();
     });
 
-    // Init
     resetTable();
     loop();
   </script>
