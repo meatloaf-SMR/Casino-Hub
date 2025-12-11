@@ -416,11 +416,12 @@
 
     /* Avatar rendering */
     .avatar-face {
-      width: 28px;
-      height: 28px;
+      width: 32px;
+      height: 32px;
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       grid-template-rows: repeat(7, 1fr);
+      image-rendering: pixelated;
     }
 
     .pixel {
@@ -455,4 +456,106 @@
           <div class="gameTitle">Slots</div>
           <div class="gameDesc">Simple spins, bright reels.</div>
         </div>
-        <div class="gameCard" onclick="openGame
+        <div class="gameCard" onclick="openGame('blackjack.html')">
+          <div class="gameTitle">Blackjack</div>
+          <div class="gameDesc">Hit, stand, and hold your nerve.</div>
+        </div>
+        <div class="gameCard" onclick="openGame('depthshard.html')">
+          <div class="gameTitle">Depthshard</div>
+          <div class="gameDesc">Atmospheric experimental project.</div>
+        </div>
+        <div class="gameCard" onclick="openGame('plagueSim.html')">
+          <div class="gameTitle">Sim Prototype</div>
+          <div class="gameDesc">Early systems testbed.</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="rightCol">
+      <iframe id="gameFrame" src="" title="Game frame"></iframe>
+
+      <div id="bottomBar">
+        <button id="infoButton">Info</button>
+        <div id="bottomHint">Press Esc for calculator overlay.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lock overlay -->
+  <div id="lockOverlay">
+    <div id="lockCard">
+      <div id="lockTitle">Enter Access Code</div>
+      <div id="lockDesc">Private workspace. Type the 3‑letter code.</div>
+      <input id="lockInput" type="password" maxlength="16" placeholder="Code" />
+      <button id="lockButton">Unlock</button>
+      <div id="lockError"></div>
+    </div>
+  </div>
+
+  <!-- Name modal -->
+  <div id="nameModalOverlay" class="modalOverlay">
+    <div class="modal">
+      <div class="modalTitle">What’s your name?</div>
+      <div class="modalDesc">This is just for fun. You can change it later in the Info section.</div>
+      <input id="nameInput" class="modalInput" type="text" maxlength="20" placeholder="Type your name" />
+      <div class="modalButtonRow">
+        <button id="nameSaveButton" class="modalButton primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Avatar modal -->
+  <div id="avatarModalOverlay" class="modalOverlay">
+    <div class="modal">
+      <div class="modalTitle">Choose your avatar</div>
+      <div class="modalDesc">Pick a simple 8‑bit face. You can change this anytime in Info.</div>
+      <div id="avatarGrid"></div>
+      <div class="modalButtonRow">
+        <button id="avatarSaveButton" class="modalButton primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Info overlay -->
+  <div id="infoOverlay">
+    <div id="infoCard">
+      <div id="infoTitle">Profile & Info</div>
+
+      <div class="infoRow">
+        <div>
+          <span class="infoLabel">Name:&nbsp;</span>
+          <span class="infoValue" id="infoNameValue">Player</span>
+        </div>
+        <button class="infoButton" id="infoEditName">Edit name</button>
+      </div>
+
+      <div class="infoRow">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="infoLabel">Avatar:&nbsp;</span>
+          <div id="infoAvatarDisplay"></div>
+        </div>
+        <button class="infoButton" id="infoEditAvatar">Edit avatar</button>
+      </div>
+
+      <div class="infoRow">
+        <span class="infoLabel">Local only:</span>
+        <span class="infoValue">Everything is saved in this browser.</span>
+      </div>
+
+      <button id="infoClose">Close</button>
+    </div>
+  </div>
+
+  <!-- Panic overlay -->
+  <div id="panicOverlay">
+    <div id="panicContent">
+      <div id="panicTitle">Calculator</div>
+      <div id="panicDesc">Quick cover screen. Type normally to keep up appearances.</div>
+      <div id="panicCloseHint">Press Esc again to return to the hub.</div>
+    </div>
+  </div>
+
+  <script>
+    const PASSWORD = "smr";
+
+    const lockOverlay = document.getElementById("lockOverlay");
