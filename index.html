@@ -559,3 +559,190 @@
     const PASSWORD = "smr";
 
     const lockOverlay = document.getElementById("lockOverlay");
+    
+  <script>
+    const PASSWORD = "smr";
+
+    const lockOverlay = document.getElementById("lockOverlay");
+    const lockInput = document.getElementById("lockInput");
+    const lockButton = document.getElementById("lockButton");
+    const lockError = document.getElementById("lockError");
+
+    const nameModalOverlay = document.getElementById("nameModalOverlay");
+    const nameInput = document.getElementById("nameInput");
+    const nameSaveButton = document.getElementById("nameSaveButton");
+
+    const avatarModalOverlay = document.getElementById("avatarModalOverlay");
+    const avatarGrid = document.getElementById("avatarGrid");
+    const avatarSaveButton = document.getElementById("avatarSaveButton");
+
+    const infoOverlay = document.getElementById("infoOverlay");
+    const infoNameValue = document.getElementById("infoNameValue");
+    const infoAvatarDisplay = document.getElementById("infoAvatarDisplay");
+    const infoEditName = document.getElementById("infoEditName");
+    const infoEditAvatar = document.getElementById("infoEditAvatar");
+    const infoClose = document.getElementById("infoClose");
+    const infoButton = document.getElementById("infoButton");
+
+    const panicOverlay = document.getElementById("panicOverlay");
+    const gameFrame = document.getElementById("gameFrame");
+
+    let playerName = null;
+    let playerAvatarIndex = null;
+    let selectedAvatarIndex = null;
+
+    function openGame(src) {
+      gameFrame.src = src;
+    }
+
+    /* ---------- Avatar definitions (12 simple 8-bit faces) ---------- */
+    const avatarPalette = [
+      "#ffb4b4","#ffd28c","#ffe28c","#c0ff8c",
+      "#8cd8ff","#c8b4ff","#ff8ccc","#ff9b73",
+      "#a0ffc8","#ffffff","#d3d3d3","#9090ff"
+    ];
+
+    const baseFacePattern = [
+      [0,0,1,1,1,0,0],
+      [0,1,1,1,1,1,0],
+      [1,1,2,1,2,1,1],
+      [1,1,1,1,1,1,1],
+      [1,1,3,3,3,1,1],
+      [0,1,1,1,1,1,0],
+      [0,0,1,1,1,0,0]
+    ];
+
+    function createAvatarElement(index) {
+      const faceColor = avatarPalette[index % avatarPalette.length];
+      const faceDiv = document.createElement("div");
+      faceDiv.className = "avatar-face";
+
+      for (let y = 0; y < 7; y++) {
+        for (let x = 0; x < 7; x++) {
+          const cell = baseFacePattern[y][x];
+          const pixel = document.createElement("div");
+          pixel.className = "pixel";
+          if (cell === 1) pixel.style.background = faceColor;
+          else if (cell === 2) pixel.style.background = "#000";
+          else if (cell === 3) pixel.style.background = "#660000";
+          else pixel.style.background = "transparent";
+          faceDiv.appendChild(pixel);
+        }
+      }
+      return faceDiv;
+    }
+
+    function populateAvatarGrid() {
+      avatarGrid.innerHTML = "";
+      for (let i = 0; i < 12; i++) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "avatarOption";
+        wrapper.dataset.index = i.toString();
+        const avatarEl = createAvatarElement(i);
+        wrapper.appendChild(avatarEl);
+        wrapper.addEventListener("click", () => {
+          selectedAvatarIndex = i;
+          document.querySelectorAll(".avatarOption").forEach(el => {
+            el.classList.toggle("selected", parseInt(el.dataset.index) === i);
+          });
+        });
+        avatarGrid.appendChild(wrapper);
+      }
+    }
+
+    /* ---------- Lock logic ---------- */
+    function tryUnlock() {
+      const value = lockInput.value.trim();
+      if (value.toLowerCase() === PASSWORD) {
+        lockError.textContent = "";
+        lockOverlay.style.display = "none";
+        initializeProfileFlow();
+      } else {
+        lockError.textContent = "Incorrect code.";
+      }
+    }
+    lockButton.addEventListener("click", tryUnlock);
+    lockInput.addEventListener("keydown", e => { if (e.key === "Enter") tryUnlock(); });
+
+    /* ---------- Name & avatar flow ---------- */
+    function showNameModal() {
+      nameModalOverlay.style.display = "flex";
+      nameInput.value = playerName || "";
+      nameInput.focus();
+    }
+    function hideNameModal() { nameModalOverlay.style.display = "none"; }
+
+    function showAvatarModal() {
+      populateAvatarGrid();
+      if (playerAvatarIndex != null) {
+        selectedAvatarIndex = playerAvatarIndex;
+        document.querySelectorAll(".avatarOption").forEach(el => {
+          el.classList.toggle("selected", parseInt(el.dataset.index) === playerAvatarIndex);
+        });
+      }
+      avatarModalOverlay.style.display = "flex";
+    }
+    function hideAvatarModal() { avatarModalOverlay.style.display = "none"; }
+
+    nameSaveButton.addEventListener("click", () => {
+      const val = nameInput.value.trim();
+      if (!val) return;
+      playerName = val;
+      localStorage.setItem("playerName", playerName);
+      hideNameModal();
+      if (playerAvatarIndex == null) showAvatarModal();
+    });
+    nameInput.addEventListener("keydown", e => { if (e.key === "Enter") nameSaveButton.click(); });
+
+    avatarSaveButton.addEventListener("click", () => {
+      if (selectedAvatarIndex == null) return;
+      playerAvatarIndex = selectedAvatarIndex;
+      localStorage.setItem("playerAvatarIndex", playerAvatarIndex.toString());
+      hideAvatarModal();
+    });
+
+    /* ---------- Info overlay ---------- */
+    infoButton.addEventListener("click", () => { openInfo(); });
+    infoClose.addEventListener("click", () => { infoOverlay.style.display = "none"; });
+    infoEditName.addEventListener("click", () => { infoOverlay.style.display = "none"; showNameModal(); });
+    infoEditAvatar.addEventListener("click", () => { infoOverlay.style.display = "none"; showAvatarModal(); });
+
+    function openInfo() {
+      refreshInfoUI();
+      infoOverlay.style.display = "flex";
+    }
+
+    function refreshInfoUI() {
+      infoNameValue.textContent = playerName || "Player";
+      infoAvatarDisplay.innerHTML = "";
+      if (playerAvatarIndex != null) {
+        infoAvatarDisplay.appendChild(createAvatarElement(playerAvatarIndex));
+      }
+    }
+
+    /* ---------- Panic overlay ---------- */
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") {
+        panicOverlay.style.display = (panicOverlay.style.display === "flex") ? "none" : "flex";
+      }
+    });
+
+    /* ---------- Initialization ---------- */
+    function initializeProfileFlow() {
+      playerName = localStorage.getItem("playerName");
+      const storedAvatarIndex = localStorage.getItem("playerAvatarIndex");
+      playerAvatarIndex = storedAvatarIndex != null ? parseInt(storedAvatarIndex) : null;
+      if (!playerName) {
+        showNameModal();
+      } else if (playerAvatarIndex == null) {
+        showAvatarModal();
+      }
+    }
+
+    window.addEventListener("load", () => {
+      lockOverlay.style.display = "flex";
+      gameFrame.src = "";
+    });
+  </script>
+</body>
+</html>
