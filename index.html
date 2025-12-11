@@ -1,432 +1,921 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Casino Game Hub</title>
+  <meta charset="UTF-8">
+  <title>Casino Hub</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
 
-<style>
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: system-ui, sans-serif;
-  }
+    body {
+      background: radial-gradient(circle at top, #031018, #020508 65%, #000 100%);
+      color: #f4f4f4;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+    }
 
-  body {
-    background: radial-gradient(circle at top, #0b1924, #02070b 70%);
-    color: #f4f4f4;
-    padding: 30px;
-    min-height: 100vh;
-  }
+    h1 {
+      margin-bottom: 4px;
+    }
 
-  /* ✅ FULL WHITE LOCK SCREEN */
-  #lockOverlay {
-    position: fixed;
-    inset: 0;
-    background: #ffffff;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 999999; /* above everything */
-  }
+    #subtitle {
+      font-size: 13px;
+      opacity: 0.85;
+      margin-bottom: 14px;
+    }
 
-  #lockBox {
-    text-align: center;
-    width: 300px;
-  }
+    /* Top bar with update banner */
+    #topBar {
+      width: 100%;
+      max-width: 1100px;
+      margin-bottom: 10px;
+    }
 
-  #lockBox h2 {
-    color: #111;
-    margin-bottom: 20px;
-    font-size: 26px;
-  }
+    #updateBar {
+      width: 100%;
+      background: linear-gradient(90deg, #18212f, #10151f);
+      border-radius: 9px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      border: 1px solid rgba(255,255,255,0.05);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+    }
 
-  #codeInput {
-    width: 100%;
-    padding: 12px;
-    font-size: 18px;
-    border: 2px solid #ccc;
-    border-radius: 6px;
-  }
+    #updateLabel {
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-size: 11px;
+      color: #f9d675;
+      margin-right: 8px;
+    }
 
-  #unlockBtn {
-    width: 100%;
-    margin-top: 15px;
-    padding: 12px;
-    font-size: 18px;
-    background: #4caf50;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-  }
+    #updateText {
+      flex: 1;
+      opacity: 0.9;
+    }
 
-  #unlockBtn:hover {
-    background: #43a047;
-  }
+    #updateTime {
+      margin-left: 8px;
+      opacity: 0.65;
+      font-size: 11px;
+      white-space: nowrap;
+    }
 
-  #codeError {
-    margin-top: 10px;
-    color: red;
-    font-size: 16px;
-  }
+    /* Layout wrapper */
+    #mainWrapper {
+      width: 100%;
+      max-width: 1100px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
 
-  /* ✅ Update Bar */
-  #updateBar {
-    width: 100%;
-    background: #ffffff;
-    color: #222;
-    padding: 12px 20px;
-    font-size: 18px;
-    border-bottom: 1px solid #ccc;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    position: sticky;
-    top: 0;
-    z-index: 9998;
-    display: none;
-    align-items: center;
-    gap: 15px;
-    transform: translateY(-100%);
-    opacity: 0;
-    animation: slideDown 0.5s ease forwards;
-  }
+    /* Left column (profile card + game grid) */
+    #leftCol {
+      flex: 1.4;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
 
-  @keyframes slideDown {
-    from { transform: translateY(-100%); opacity: 0; }
-    to   { transform: translateY(0); opacity: 1; }
-  }
+    /* Right column (iframe) */
+    #rightCol {
+      flex: 1.6;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
 
-  #updateText {
-    flex-grow: 1;
-    text-align: center;
-  }
+    /* Profile card above game grid */
+    #profileCard {
+      background: linear-gradient(135deg, #131a26, #0a1018);
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid rgba(255,255,255,0.06);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+    }
 
-  #closeUpdate {
-    background: transparent;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-    color: #444;
-    padding: 0 5px;
-  }
+    #avatarDisplay {
+      width: 48px;
+      height: 48px;
+      image-rendering: pixelated;
+      background: #111;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
 
-  #closeUpdate:hover {
-    color: #000;
-  }
+    .avatar-face {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      grid-template-rows: repeat(7, 1fr);
+    }
 
-  h1 {
-    text-align: center;
-    font-size: 48px;
-    letter-spacing: 4px;
-    margin-bottom: 30px;
-  }
+    .pixel {
+      width: 100%;
+      height: 100%;
+    }
 
-  .games {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 25px;
-    padding: 10px;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
+    #profileInfo {
+      flex: 1;
+    }
 
-  .card {
-    background: #0f2a38;
-    border: 3px solid rgba(255,255,255,0.1);
-    border-radius: 14px;
-    padding: 20px;
-    text-align: center;
-    box-shadow: 0 6px 15px rgba(0,0,0,0.4);
-  }
+    #profileName {
+      font-size: 15px;
+      font-weight: 600;
+    }
 
-  .card h2 {
-    margin-bottom: 10px;
-    font-size: 26px;
-  }
+    #profileSubtitle {
+      font-size: 12px;
+      opacity: 0.8;
+    }
 
-  .card p {
-    margin-bottom: 15px;
-    opacity: 0.85;
-  }
+    #profileButton {
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: none;
+      font-size: 12px;
+      cursor: pointer;
+      background: #f9d675;
+      color: #111;
+      box-shadow: 0 2px 0 #8a6220;
+      white-space: nowrap;
+    }
 
-  .btn {
-    padding: 10px 20px;
-    border-radius: 999px;
-    border: none;
-    cursor: pointer;
-    font-weight: 600;
-    margin: 5px 0;
-    width: 100%;
-    background: radial-gradient(circle at top, #f9d675, #d8a73e);
-    color: #111;
-    box-shadow: 0 4px 0 #8a6220;
-    transition: 0.1s;
-  }
+    /* Game grid */
+    #gameGrid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
 
-  .btn:hover {
-    filter: brightness(1.05);
-  }
+    .gameCard {
+      background: radial-gradient(circle at top, #182233, #0e141f);
+      border-radius: 10px;
+      padding: 10px;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.65);
+      transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+    }
 
-  .btn:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 #8a6220;
-  }
+    .gameCard:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 18px rgba(0,0,0,0.8);
+      border-color: rgba(255,255,255,0.25);
+    }
 
-  #gameFrame {
-    width: 100%;
-    height: 700px;
-    border: none;
-    margin-top: 40px;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-    display: block;
-  }
+    .gameTitle {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
 
-  /* ✅ Calculator Panic Screen */
-  #calculatorScreen {
-    display: none;
-    background: #f4f4f4;
-    color: #111;
-    position: fixed;
-    inset: 0;
-    padding: 40px;
-    z-index: 9999999;
-    overflow: auto;
-  }
+    .gameDesc {
+      font-size: 12px;
+      opacity: 0.8;
+    }
 
-  #calcBox {
-    max-width: 320px;
-    margin: 60px auto;
-    background: white;
-    padding: 25px;
-    border-radius: 14px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-  }
+    /* Iframe */
+    #gameFrame {
+      width: 100%;
+      height: 480px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.75);
+      background: #05070a;
+    }
 
-  #calcDisplay {
-    width: 100%;
-    height: 60px;
-    font-size: 28px;
-    margin-bottom: 20px;
-    text-align: right;
-    padding: 10px 14px;
-    border: 2px solid #ccc;
-    border-radius: 8px;
-    background: #fefefe;
-  }
+    /* Bottom row (Info button, etc.) */
+    #bottomBar {
+      margin-top: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: rgba(255,255,255,0.75);
+    }
 
-  .calcGrid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-  }
+    #infoButton {
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      background: #263145;
+      color: #f4f4f4;
+    }
 
-  .calcBtn {
-    width: 100%;
-    padding: 14px 0;
-    font-size: 20px;
-    border: none;
-    background: #e0e0e0;
-    border-radius: 0;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
+    /* Lock overlay */
+    #lockOverlay {
+      position: fixed;
+      inset: 0;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
 
-  .calcBtn:hover {
-    background: #d0d0d0;
-  }
+    #lockCard {
+      background: #f5f5f5;
+      border-radius: 10px;
+      padding: 16px 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      text-align: center;
+      color: #111;
+      width: 260px;
+    }
 
-  .calcBtn:active {
-    background: #bbb;
-  }
+    #lockTitle {
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
 
-  .calcBtn.wide {
-    grid-column: span 4;
-  }
-</style>
+    #lockDesc {
+      font-size: 13px;
+      opacity: 0.8;
+      margin-bottom: 10px;
+    }
 
+    #lockInput {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      outline: none;
+      margin-bottom: 8px;
+    }
+
+    #lockButton {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: none;
+      background: #111;
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    #lockError {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #b00020;
+      min-height: 14px;
+    }
+
+    /* Name modal */
+    .modalOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9000;
+    }
+
+    .modal {
+      background: #121722;
+      border-radius: 10px;
+      padding: 14px 16px;
+      width: 280px;
+      border: 1px solid rgba(255,255,255,0.15);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+    }
+
+    .modalTitle {
+      font-weight: 600;
+      margin-bottom: 6px;
+      font-size: 15px;
+    }
+
+    .modalDesc {
+      font-size: 12px;
+      opacity: 0.85;
+      margin-bottom: 10px;
+    }
+
+    .modalInput {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: #0b1018;
+      color: #f4f4f4;
+      outline: none;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .modalButtonRow {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+
+    .modalButton {
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .modalButton.primary {
+      background: #f9d675;
+      color: #111;
+      box-shadow: 0 2px 0 #8a6220;
+    }
+
+    /* Avatar modal */
+    #avatarGrid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 6px;
+      margin-bottom: 10px;
+    }
+
+    .avatarOption {
+      width: 44px;
+      height: 44px;
+      border-radius: 7px;
+      background: #05070b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.2);
+      image-rendering: pixelated;
+      transition: transform 0.1s ease, border-color 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    .avatarOption:hover {
+      transform: translateY(-1px);
+      border-color: #f9d675;
+      box-shadow: 0 0 0 1px rgba(249,214,117,0.4);
+    }
+
+    .avatarOption.selected {
+      border-color: #f9d675;
+      box-shadow: 0 0 0 1px rgba(249,214,117,0.7);
+    }
+
+    /* Info overlay */
+    #infoOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 8500;
+    }
+
+    #infoCard {
+      background: #121722;
+      border-radius: 10px;
+      padding: 16px 18px;
+      width: 320px;
+      border: 1px solid rgba(255,255,255,0.16);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.85);
+    }
+
+    #infoTitle {
+      font-weight: 600;
+      margin-bottom: 6px;
+      font-size: 16px;
+    }
+
+    .infoRow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 6px 0;
+      font-size: 13px;
+    }
+
+    .infoLabel {
+      opacity: 0.8;
+    }
+
+    .infoValue {
+      font-weight: 500;
+    }
+
+    .infoButton {
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: none;
+      background: #263145;
+      color: #f4f4f4;
+      cursor: pointer;
+      font-size: 11px;
+      margin-left: 8px;
+    }
+
+    #infoClose {
+      margin-top: 10px;
+      width: 100%;
+      padding: 6px 0;
+      border-radius: 999px;
+      border: none;
+      background: #f9d675;
+      color: #111;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    /* Calculator panic overlay (placeholder) */
+    #panicOverlay {
+      position: fixed;
+      inset: 0;
+      background: #ffffff;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      color: #111;
+    }
+
+    #panicContent {
+      background: #f5f5f5;
+      border-radius: 10px;
+      padding: 16px 18px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.2);
+      width: 260px;
+      text-align: center;
+    }
+
+    #panicTitle {
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    #panicDesc {
+      font-size: 13px;
+      opacity: 0.8;
+      margin-bottom: 8px;
+    }
+
+    #panicCloseHint {
+      font-size: 11px;
+      opacity: 0.7;
+    }
+
+  </style>
 </head>
 <body>
+  <h1>Casino Hub</h1>
+  <div id="subtitle">A quiet little corner of games.</div>
 
-<!-- ✅ FULL WHITE LOCK SCREEN -->
-<div id="lockOverlay">
-  <div id="lockBox">
-    <h2>Enter Code</h2>
-    <input id="codeInput" type="password" placeholder="Enter code">
-    <button id="unlockBtn" onclick="unlockHub()">Unlock</button>
-    <p id="codeError"></p>
-  </div>
-</div>
-
-<!-- ✅ Update Bar -->
-<div id="updateBar">
-  <span id="updateText">Loading latest update…</span>
-  <button id="closeUpdate">✕</button>
-</div>
-
-<!-- ✅ Calculator Panic Screen -->
-<div id="calculatorScreen">
-  <div id="calcBox">
-    <input id="calcDisplay" disabled>
-
-    <div class="calcGrid">
-      <button class="calcBtn" onclick="pressCalc('7')">7</button>
-      <button class="calcBtn" onclick="pressCalc('8')">8</button>
-      <button class="calcBtn" onclick="pressCalc('9')">9</button>
-      <button class="calcBtn" onclick="pressCalc('/')">÷</button>
-
-      <button class="calcBtn" onclick="pressCalc('4')">4</button>
-      <button class="calcBtn" onclick="pressCalc('5')">5</button>
-      <button class="calcBtn" onclick="pressCalc('6')">6</button>
-      <button class="calcBtn" onclick="pressCalc('*')">×</button>
-
-      <button class="calcBtn" onclick="pressCalc('1')">1</button>
-      <button class="calcBtn" onclick="pressCalc('2')">2</button>
-      <button class="calcBtn" onclick="pressCalc('3')">3</button>
-      <button class="calcBtn" onclick="pressCalc('-')">−</button>
-
-      <button class="calcBtn" onclick="pressCalc('0')">0</button>
-      <button class="calcBtn" onclick="pressCalc('.')">.</button>
-      <button class="calcBtn" onclick="calculate()">=</button>
-      <button class="calcBtn" onclick="pressCalc('+')">+</button>
-
-      <button class="calcBtn wide" onclick="clearCalc()">Clear</button>
+  <div id="topBar">
+    <div id="updateBar">
+      <div id="updateLabel">Update</div>
+      <div id="updateText">Welcome back. New profile system with name and 8‑bit avatar added.</div>
+      <div id="updateTime" id="updateTimeText">Today</div>
     </div>
   </div>
-</div>
 
-<h1>Casino Game Hub</h1>
+  <div id="mainWrapper">
+    <div id="leftCol">
+      <!-- Profile card -->
+      <div id="profileCard">
+        <div id="avatarDisplay">
+          <!-- Avatar face will be rendered here -->
+        </div>
+        <div id="profileInfo">
+          <div id="profileName">Player</div>
+          <div id="profileSubtitle">Tap Profile to see your info.</div>
+        </div>
+        <button id="profileButton">Profile</button>
+      </div>
 
-<div class="games">
+      <!-- Game grid -->
+      <div id="gameGrid">
+        <div class="gameCard" onclick="openGame('pool.html')">
+          <div class="gameTitle">Pool</div>
+          <div class="gameDesc">Classic table, clean physics.</div>
+        </div>
+        <div class="gameCard" onclick="openGame('minigolf.html')">
+          <div class="gameTitle">Mini Golf</div>
+          <div class="gameDesc">Endless procedural courses.</div>
+        </div>
+        <div class="gameCard" onclick="openGame('slots.html')">
+          <div class="gameTitle">Slots</div>
+          <div class="gameDesc">Simple spins, bright reels.</div>
+        </div>
+        <div class="gameCard" onclick="openGame('blackjack.html')">
+          <div class="gameTitle">Blackjack</div>
+          <div class="gameDesc">Hit, stand, and hold your nerve.</div>
+        </div>
+        <div class="gameCard" onclick="openGame('depthshard.html')">
+          <div class="gameTitle">Depthshard</div>
+          <div class="gameDesc">Atmospheric experimental project.</div>
+        </div>
+        <div class="gameCard" onclick="openGame('plagueSim.html')">
+          <div class="gameTitle">Sim Prototype</div>
+          <div class="gameDesc">Early systems testbed.</div>
+        </div>
+      </div>
+    </div>
 
-  <div class="card">
-    <h2>Blackjack</h2>
-    <p>Beat the dealer to 21.</p>
-    <button class="btn" onclick="openGame('blackjack.html')">Play</button>
+    <div id="rightCol">
+      <iframe id="gameFrame" src="" title="Game frame"></iframe>
+
+      <div id="bottomBar">
+        <button id="infoButton">Info</button>
+        <div id="bottomHint">Press Esc for calculator overlay.</div>
+      </div>
+    </div>
   </div>
 
-  <div class="card">
-    <h2>Roulette</h2>
-    <p>Bet on red, black, or numbers.</p>
-    <button class="btn" onclick="openGame('roulette.html')">Play</button>
+  <!-- Lock overlay -->
+  <div id="lockOverlay">
+    <div id="lockCard">
+      <div id="lockTitle">Enter Access Code</div>
+      <div id="lockDesc">Private workspace. Type the 3‑letter code.</div>
+      <input id="lockInput" type="password" maxlength="16" placeholder="Code" />
+      <button id="lockButton">Unlock</button>
+      <div id="lockError"></div>
+    </div>
   </div>
 
-  <div class="card">
-    <h2>Poker</h2>
-    <p>Classic Texas Hold'em.</p>
-    <button class="btn" onclick="openGame('poker.html')">Play</button>
+  <!-- Name modal -->
+  <div id="nameModalOverlay" class="modalOverlay">
+    <div class="modal">
+      <div class="modalTitle">What’s your name?</div>
+      <div class="modalDesc">This is just for fun. You can change it later in the Info section.</div>
+      <input id="nameInput" class="modalInput" type="text" maxlength="20" placeholder="Type your name" />
+      <div class="modalButtonRow">
+        <button id="nameSaveButton" class="modalButton primary">Save</button>
+      </div>
+    </div>
   </div>
 
-  <div class="card">
-    <h2>Pool</h2>
-    <p>8‑ball billiards physics.</p>
-    <button class="btn" onclick="openGame('pool.html')">Play</button>
+  <!-- Avatar modal -->
+  <div id="avatarModalOverlay" class="modalOverlay">
+    <div class="modal">
+      <div class="modalTitle">Choose your avatar</div>
+      <div class="modalDesc">Pick a simple 8‑bit face. You can change this anytime in Info.</div>
+      <div id="avatarGrid"></div>
+      <div class="modalButtonRow">
+        <button id="avatarSaveButton" class="modalButton primary">Save</button>
+      </div>
+    </div>
   </div>
 
-  <div class="card">
-    <h2>Air Hockey</h2>
-    <p>1P/2P fast arcade action.</p>
-    <button class="btn" onclick="openGame('air_hockey.html')">Play</button>
+  <!-- Info overlay -->
+  <div id="infoOverlay">
+    <div id="infoCard">
+      <div id="infoTitle">Profile & Info</div>
+
+      <div class="infoRow">
+        <div>
+          <span class="infoLabel">Name:&nbsp;</span>
+          <span class="infoValue" id="infoNameValue">Player</span>
+        </div>
+        <button class="infoButton" id="infoEditName">Edit name</button>
+      </div>
+
+      <div class="infoRow">
+        <div>
+          <span class="infoLabel">Avatar:&nbsp;</span>
+          <span class="infoValue">8‑bit face</span>
+        </div>
+        <button class="infoButton" id="infoEditAvatar">Edit avatar</button>
+      </div>
+
+      <div class="infoRow">
+        <span class="infoLabel">Local only:</span>
+        <span class="infoValue">Everything is saved in this browser.</span>
+      </div>
+
+      <button id="infoClose">Close</button>
+    </div>
   </div>
 
-  <div class="card">
-    <h2>Slot Machine</h2>
-    <p>Classic 3‑reel fruit machine.</p>
-    <button class="btn" onclick="openGame('slot_machine.html')">Play</button>
+  <!-- Panic / calculator overlay (placeholder content) -->
+  <div id="panicOverlay">
+    <div id="panicContent">
+      <div id="panicTitle">Calculator</div>
+      <div id="panicDesc">Quick cover screen. Type normally to keep up appearances.</div>
+      <div id="panicCloseHint">Press Esc again to return to the hub.</div>
+    </div>
   </div>
 
-  <div class="card">
-    <h2>Craps</h2>
-    <p>Classic dice table.</p>
-    <button class="btn" onclick="openGame('craps.html')">Play</button>
-  </div>
+  <script>
+    const PASSWORD = "smr";
 
-  <div class="card">
-    <h2>Higher or Lower</h2>
-    <p>Guess the next roll.</p>
-    <button class="btn" onclick="openGame('higher_lower.html')">Play</button>
-  </div>
+    const lockOverlay = document.getElementById("lockOverlay");
+    const lockInput = document.getElementById("lockInput");
+    const lockButton = document.getElementById("lockButton");
+    const lockError = document.getElementById("lockError");
 
-  <div class="card">
-    <h2>Mini Golf</h2>
-    <p>Endless procedural golf.</p>
-    <button class="btn" onclick="openGame('mini_golf.html')">Play</button>
-  </div>
+    const nameModalOverlay = document.getElementById("nameModalOverlay");
+    const nameInput = document.getElementById("nameInput");
+    const nameSaveButton = document.getElementById("nameSaveButton");
 
-  <div class="card">
-    <h2>Info</h2>
-    <p>Your local stats.</p>
-    <button class="btn" onclick="openGame('info.html')">Open</button>
-  </div>
+    const avatarModalOverlay = document.getElementById("avatarModalOverlay");
+    const avatarGrid = document.getElementById("avatarGrid");
+    const avatarSaveButton = document.getElementById("avatarSaveButton");
 
-</div>
+    const profileName = document.getElementById("profileName");
+    const profileSubtitle = document.getElementById("profileSubtitle");
+    const avatarDisplay = document.getElementById("avatarDisplay");
+    const profileButton = document.getElementById("profileButton");
 
-<iframe id="gameFrame"></iframe>
+    const infoOverlay = document.getElementById("infoOverlay");
+    const infoNameValue = document.getElementById("infoNameValue");
+    const infoEditName = document.getElementById("infoEditName");
+    const infoEditAvatar = document.getElementById("infoEditAvatar");
+    const infoClose = document.getElementById("infoClose");
+    const infoButton = document.getElementById("infoButton");
 
-<script>
-/* ✅ Secret Code (change anytime) */
-let secretCode = "smr";
+    const panicOverlay = document.getElementById("panicOverlay");
 
-/* ✅ Unlock Function */
-function unlockHub() {
-  const input = document.getElementById("codeInput").value.trim().toLowerCase();
+    const gameFrame = document.getElementById("gameFrame");
 
-  if (input === secretCode.toLowerCase()) {
-    document.getElementById("lockOverlay").style.display = "none";
-  } else {
-    document.getElementById("codeError").textContent = "Invalid code";
-  }
-}
+    let playerName = null;
+    let playerAvatarIndex = null;
+    let selectedAvatarIndex = null;
 
-/* ✅ Enter key unlock */
-document.getElementById("codeInput").addEventListener("keydown", function(e) {
-  if (e.key === "Enter") unlockHub();
-});
+    function openGame(src) {
+      gameFrame.src = src;
+    }
 
-/* ✅ Update text */
-fetch("./updates.txt")
-  .then(r => r.text())
-  .then(t => document.getElementById("updateText").textContent = t.trim())
-  .catch(() => document.getElementById("updateText").textContent = "No updates available.");
+    /* ---------- Avatar definitions (12 simple 8-bit faces) ---------- */
 
-/* ✅ Close update bar */
-document.getElementById("closeUpdate").addEventListener("click", () => {
-  document.getElementById("updateBar").style.display = "none";
-});
+    const avatarPalette = [
+      "#ffb4b4", // 0 pinkish
+      "#ffd28c", // 1 peach
+      "#ffe28c", // 2 pale gold
+      "#c0ff8c", // 3 greenish
+      "#8cd8ff", // 4 light blue
+      "#c8b4ff", // 5 lavender
+      "#ff8ccc", // 6 hot pink
+      "#ff9b73", // 7 orange
+      "#a0ffc8", // 8 mint
+      "#ffffff", // 9 white
+      "#d3d3d3", // 10 light gray
+      "#9090ff"  // 11 periwinkle
+    ];
 
-/* ✅ Game loader */
-function openGame(file) {
-  const frame = document.getElementById("gameFrame");
-  frame.src = file;
-  setTimeout(() => frame.scrollIntoView({ behavior: "smooth" }), 150);
-}
+    // Each face is a 7x7 layout with:
+    // 0 = transparent, 1 = skin color, 2 = eye, 3 = mouth
+    const baseFacePattern = [
+      [0,0,1,1,1,0,0],
+      [0,1,1,1,1,1,0],
+      [1,1,2,1,2,1,1],
+      [1,1,1,1,1,1,1],
+      [1,1,3,3,3,1,1],
+      [0,1,1,1,1,1,0],
+      [0,0,1,1,1,0,0]
+    ];
 
-/* ✅ Panic Key */
-document.addEventListener("keydown", e => {
-  if (e.key === "Escape") {
-    document.getElementById("calculatorScreen").style.display = "block";
-    history.pushState({}, "", "/calculator");
-  }
-});
+    function createAvatarElement(index, sizeCells = 7) {
+      const faceColor = avatarPalette[index % avatarPalette.length];
+      const faceDiv = document.createElement("div");
+      faceDiv.className = "avatar-face";
 
-/* ✅ Calculator Logic */
-function pressCalc(v) {
-  document.getElementById("calcDisplay").value += v;
-}
+      for (let y = 0; y < sizeCells; y++) {
+        for (let x = 0; x < sizeCells; x++) {
+          const cell = baseFacePattern[y][x];
+          const pixel = document.createElement("div");
+          pixel.className = "pixel";
 
-function clearCalc() {
-  document.getElementById("calcDisplay").value = "";
-}
+          if (cell === 1) {
+            pixel.style.background = faceColor;
+          } else if (cell === 2) {
+            pixel.style.background = "#000000";
+          } else if (cell === 3) {
+            pixel.style.background = "#660000";
+          } else {
+            pixel.style.background = "transparent";
+          }
 
-function calculate() {
-  try {
-    document.getElementById("calcDisplay").value =
-      eval(document.getElementById("calcDisplay").value);
-  } catch {
-    document.getElementById("calcDisplay").value = "Error";
-  }
-}
-</script>
+          faceDiv.appendChild(pixel);
+        }
+      }
 
+      return faceDiv;
+    }
+
+    function renderAvatarInDisplay(index) {
+      avatarDisplay.innerHTML = "";
+      if (index == null) return;
+      const avatarEl = createAvatarElement(index);
+      avatarDisplay.appendChild(avatarEl);
+    }
+
+    function populateAvatarGrid() {
+      avatarGrid.innerHTML = "";
+      for (let i = 0; i < 12; i++) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "avatarOption";
+        wrapper.dataset.index = i.toString();
+
+        const avatarEl = createAvatarElement(i);
+        wrapper.appendChild(avatarEl);
+
+        wrapper.addEventListener("click", () => {
+          selectedAvatarIndex = i;
+          document.querySelectorAll(".avatarOption").forEach(el => {
+            el.classList.toggle("selected", parseInt(el.dataset.index) === i);
+          });
+        });
+
+        avatarGrid.appendChild(wrapper);
+      }
+    }
+
+    /* ---------- Lock logic ---------- */
+
+    function tryUnlock() {
+      const value = lockInput.value.trim();
+      if (value.toLowerCase() === PASSWORD) {
+        lockError.textContent = "";
+        lockOverlay.style.display = "none";
+        // Once unlocked, check for name/avatar and show onboarding if missing
+        initializeProfileFlow();
+      } else {
+        lockError.textContent = "Incorrect code.";
+      }
+    }
+
+    lockButton.addEventListener("click", tryUnlock);
+    lockInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        tryUnlock();
+      }
+    });
+
+    /* ---------- Name & avatar flow ---------- */
+
+    function showNameModal() {
+      nameModalOverlay.style.display = "flex";
+      nameInput.value = playerName || "";
+      nameInput.focus();
+    }
+
+    function hideNameModal() {
+      nameModalOverlay.style.display = "none";
+    }
+
+    function showAvatarModal() {
+      populateAvatarGrid();
+      // pre-select current avatar if exists
+      if (playerAvatarIndex != null) {
+        selectedAvatarIndex = playerAvatarIndex;
+        document.querySelectorAll(".avatarOption").forEach(el => {
+          el.classList.toggle(
+            "selected",
+            parseInt(el.dataset.index) === playerAvatarIndex
+          );
+        });
+      } else {
+        selectedAvatarIndex = null;
+      }
+      avatarModalOverlay.style.display = "flex";
+    }
+
+    function hideAvatarModal() {
+      avatarModalOverlay.style.display = "none";
+    }
+
+    nameSaveButton.addEventListener("click", () => {
+      const val = nameInput.value.trim();
+      if (!val) return;
+      playerName = val;
+      localStorage.setItem("playerName", playerName);
+      hideNameModal();
+      // After name, go to avatar if missing
+      if (playerAvatarIndex == null) {
+        showAvatarModal();
+      } else {
+        refreshProfileUI();
+      }
+    });
+
+    nameInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        nameSaveButton.click();
+      }
+    });
+
+    avatarSaveButton.addEventListener("click", () => {
+      if (selectedAvatarIndex == null) return;
+      playerAvatarIndex = selectedAvatarIndex;
+      localStorage.setItem("playerAvatarIndex", playerAvatarIndex.toString());
+      hideAvatarModal();
+      refreshProfileUI();
+    });
+
+    /* ---------- Info overlay ---------- */
+
+    infoButton.addEventListener("click", () => {
+      openInfo();
+    });
+
+    profileButton.addEventListener("click", () => {
+      openInfo();
+    });
+
+    function openInfo() {
+      refreshProfileUI();
+      infoOverlay.style.display = "flex";
+    }
+
+    infoClose.addEventListener("click", () => {
+      infoOverlay.style.display = "none";
+    });
+
+    infoEditName.addEventListener("click", () => {
+      infoOverlay.style.display = "none";
+      showNameModal();
+    });
+
+    infoEditAvatar.addEventListener("click", () => {
+      infoOverlay.style.display = "none";
+      showAvatarModal();
+    });
+
+    /* ---------- Profile UI ---------- */
+
+    function refreshProfileUI() {
+      // Name
+      const nameToUse = playerName || "Player";
+      profileName.textContent = nameToUse;
+      infoNameValue.textContent = nameToUse;
+
+      // Subtitle
+      profileSubtitle.textContent = "Welcome back.";
+
+      // Avatar
+      if (playerAvatarIndex != null) {
+        renderAvatarInDisplay(playerAvatarIndex);
+      } else {
+        avatarDisplay.innerHTML = "";
+      }
+    }
+
+    /* ---------- Panic overlay (Esc key) ---------- */
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        if (panicOverlay.style.display === "flex") {
+          panicOverlay.style.display = "none";
+        } else {
+          panicOverlay.style.display = "flex";
+        }
+      }
+    });
+
+    /* ---------- Initialization ---------- */
+
+    function initializeProfileFlow() {
+      playerName = localStorage.getItem("playerName");
+      const storedAvatarIndex = localStorage.getItem("playerAvatarIndex");
+      playerAvatarIndex = storedAvatarIndex != null ? parseInt(storedAvatarIndex) : null;
+
+      // If no name or avatar, run initial setup once
+      if (!playerName) {
+        showNameModal();
+      } else if (playerAvatarIndex == null) {
+        // Name exists but no avatar (e.g., added later)
+        refreshProfileUI();
+        showAvatarModal();
+      } else {
+        refreshProfileUI();
+      }
+    }
+
+    // On page load: show lock. Only after unlock do we start profile flow.
+    window.addEventListener("load", () => {
+      lockOverlay.style.display = "flex";
+      // Game frame starts empty
+      gameFrame.src = "";
+    });
+  </script>
 </body>
 </html>
