@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <title>Darts</title>
   <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, sans-serif;
+    }
+
     body {
       background: radial-gradient(circle at top, #0b1924, #02070b 70%);
       color: #f4f4f4;
@@ -11,123 +18,306 @@
       flex-direction: column;
       align-items: center;
       padding: 20px;
-      font-family: system-ui, sans-serif;
     }
-    h1 { margin-bottom: 10px; }
-    #score { margin-bottom: 10px; font-size: 16px; }
+
+    h1 {
+      margin-bottom: 8px;
+    }
+
+    #topBar {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    #scoreDisplay, #shotDisplay {
+      opacity: 0.9;
+    }
+
+    #status {
+      font-size: 13px;
+      opacity: 0.9;
+    }
+
     canvas {
       background: #222;
-      border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+      border: 10px solid #111;
+      display: block;
     }
   </style>
 </head>
 <body>
   <h1>Darts</h1>
-  <div id="score">Score: 0</div>
+
+  <div id="topBar">
+    <span id="scoreDisplay">Score: 0</span>
+    <span id="shotDisplay">Shots: 0</span>
+  </div>
+
+  <div id="status">Step 1: Click to lock horizontal position.</div>
+
   <canvas id="dartCanvas" width="500" height="500"></canvas>
 
   <script>
     const canvas = document.getElementById("dartCanvas");
     const ctx = canvas.getContext("2d");
-    const scoreDisplay = document.getElementById("score");
+
+    const scoreDisplay = document.getElementById("scoreDisplay");
+    const shotDisplay = document.getElementById("shotDisplay");
+    const statusDisplay = document.getElementById("status");
+
+    const W = canvas.width;
+    const H = canvas.height;
+    const CX = W / 2;
+    const CY = H / 2;
 
     let score = 0;
-    let isAiming = false;
-    let aimStart = null;
-    let dart = null;
+    let shots = 0;
 
-    function drawBoard() {
-      const cx = canvas.width / 2;
-      const cy = canvas.height / 2;
-      const rings = [
-        { r: 200, color: "#006400", points: 10 },
-        { r: 150, color: "#228B22", points: 25 },
-        { r: 100, color: "#32CD32", points: 50 },
-        { r: 50,  color: "#FFD700", points: 100 }
-      ];
-      rings.forEach(ring => {
-        ctx.beginPath();
-        ctx.arc(cx, cy, ring.r, 0, Math.PI * 2);
-        ctx.fillStyle = ring.color;
-        ctx.fill();
-      });
-      ctx.beginPath();
-      ctx.arc(cx, cy, 10, 0, Math.PI * 2);
-      ctx.fillStyle = "#FF0000";
-      ctx.fill();
-    }
+    // Game states: "chooseX", "chooseY", "flying"
+    let state = "chooseX";
 
-    function drawDart() {
-      if (!dart) return;
-      ctx.beginPath();
-      ctx.arc(dart.x, dart.y, 6, 0, Math.PI * 2);
-      ctx.fillStyle = "#fff";
-      ctx.fill();
-      ctx.strokeStyle = "#000";
-      ctx.stroke();
-    }
+    // Horizontal and vertical bar positions (0..1)
+    let tX = 0;
+    let tY = 0;
+
+    // Directions for bars (1 = forward, -1 = backward)
+    let dirX = 1;
+    let dirY = 1;
+
+    const barSpeed = 0.008; // movement speed (smooth & continuous)
+
+    // Locked target positions in canvas pixels
+    let targetX = null;
+    let targetY = null;
+
+    // Dart object
+    let dart = {
+      x: CX,
+      y: H - 30,
+      vx: 0,
+      vy: 0,
+      flying: false,
+      landed: false
+    };
 
     function resetDart() {
-      dart = { x: canvas.width / 2, y: canvas.height - 20, vx: 0, vy: 0, flying: false };
+      dart.x = CX;
+      dart.y = H - 30;
+      dart.vx = 0;
+      dart.vy = 0;
+      dart.flying = false;
+      dart.landed = false;
+      targetX = null;
+      targetY = null;
+      tX = 0;
+      tY = 0;
+      dirX = 1;
+      dirY = 1;
+      state = "chooseX";
+      statusDisplay.textContent = "Step 1: Click to lock horizontal position.";
     }
 
-    function shootDart(dx, dy) {
-      dart.vx = dx / 15;
-      dart.vy = dy / 15;
-      dart.flying = true;
-    }
-
-    function update() {
-      if (dart && dart.flying) {
-        dart.x += dart.vx;
-        dart.y += dart.vy;
-        dart.vx *= 0.98;
-        dart.vy *= 0.98;
-
-        if (Math.abs(dart.vx) < 0.1 && Math.abs(dart.vy) < 0.1) {
-          dart.flying = false;
-          checkHit();
-          setTimeout(resetDart, 1000);
-        }
+    function updateBars() {
+      if (state === "chooseX") {
+        tX += barSpeed * dirX;
+        if (tX > 1) { tX = 1; dirX = -1; }
+        if (tX < 0) { tX = 0; dirX = 1; }
+      } else if (state === "chooseY") {
+        tY += barSpeed * dirY;
+        if (tY > 1) { tY = 1; dirY = -1; }
+        if (tY < 0) { tY = 0; dirY = 1; }
       }
     }
 
-    function checkHit() {
-      const cx = canvas.width / 2;
-      const cy = canvas.height / 2;
-      const dx = dart.x - cx;
-      const dy = dart.y - cy;
+    function shootDart() {
+      dart.flying = true;
+      dart.landed = false;
+      // Start from bottom center
+      dart.x = CX;
+      dart.y = H - 30;
+
+      // Simple straight-line motion toward (targetX, targetY)
+      const dx = targetX - dart.x;
+      const dy = targetY - dart.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      const speed = 18;
+
+      dart.vx = (dx / dist) * speed;
+      dart.vy = (dy / dist) * speed;
+    }
+
+    function updateDart() {
+      if (!dart.flying) return;
+
+      dart.x += dart.vx;
+      dart.y += dart.vy;
+
+      // Simple slowdown
+      dart.vx *= 0.98;
+      dart.vy *= 0.98;
+
+      const dx = dart.x - targetX;
+      const dy = dart.y - targetY;
       const dist = Math.hypot(dx, dy);
 
-      if (dist < 50) score += 100;
-      else if (dist < 100) score += 50;
-      else if (dist < 150) score += 25;
-      else if (dist < 200) score += 10;
+      if (dist < 6 || (Math.abs(dart.vx) < 0.4 && Math.abs(dart.vy) < 0.4)) {
+        dart.flying = false;
+        dart.landed = true;
+        dart.x = targetX;
+        dart.y = targetY;
+        applyScore();
+        setTimeout(resetDart, 900);
+      }
+    }
 
+    function applyScore() {
+      shots++;
+      shotDisplay.textContent = "Shots: " + shots;
+
+      const dx = dart.x - CX;
+      const dy = dart.y - CY;
+      const dist = Math.hypot(dx, dy);
+
+      let gained = 0;
+      if (dist < 25) gained = 100;
+      else if (dist < 60) gained = 60;
+      else if (dist < 110) gained = 30;
+      else if (dist < 160) gained = 15;
+      else if (dist < 210) gained = 5;
+
+      score += gained;
       scoreDisplay.textContent = "Score: " + score;
+
+      if (gained === 0) {
+        statusDisplay.textContent = "Miss! New turn: click to lock horizontal.";
+      } else {
+        statusDisplay.textContent = `Hit: +${gained} points! New turn coming...`;
+      }
+    }
+
+    function drawBoard() {
+      ctx.save();
+      ctx.translate(CX, CY);
+
+      const rings = [
+        { r: 210, color: "#004000" },
+        { r: 170, color: "#106020" },
+        { r: 130, color: "#208040" },
+        { r: 90,  color: "#30a060" },
+        { r: 50,  color: "#ffd700" }
+      ];
+
+      rings.forEach(r => {
+        ctx.beginPath();
+        ctx.arc(0, 0, r.r, 0, Math.PI * 2);
+        ctx.fillStyle = r.color;
+        ctx.fill();
+      });
+
+      ctx.beginPath();
+      ctx.arc(0, 0, 10, 0, Math.PI * 2);
+      ctx.fillStyle = "#ff0000";
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function drawBars() {
+      ctx.save();
+
+      // Horizontal bar (for X) at the bottom area
+      ctx.strokeStyle = "rgba(255,255,255,0.7)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(40, H - 40);
+      ctx.lineTo(W - 40, H - 40);
+      ctx.stroke();
+
+      const xPos = 40 + tX * (W - 80);
+      ctx.beginPath();
+      ctx.moveTo(xPos, H - 52);
+      ctx.lineTo(xPos, H - 28);
+      ctx.strokeStyle = state === "chooseX" ? "#ffd700" : "rgba(255,255,255,0.4)";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Vertical bar (for Y) on the right side
+      ctx.beginPath();
+      ctx.moveTo(W - 40, 40);
+      ctx.lineTo(W - 40, H - 80);
+      ctx.strokeStyle = "rgba(255,255,255,0.7)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      const yPos = 40 + tY * (H - 120);
+      ctx.beginPath();
+      ctx.moveTo(W - 52, yPos);
+      ctx.lineTo(W - 28, yPos);
+      ctx.strokeStyle = state === "chooseY" ? "#ffd700" : "rgba(255,255,255,0.4)";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function drawTargetMarker() {
+      if (targetX == null || targetY == null) return;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(targetX, targetY, 8, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(255,255,255,0.6)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawDart() {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(dart.x, dart.y, 6, 0, Math.PI * 2);
+      ctx.fillStyle = "#ffffff";
+      ctx.fill();
+      ctx.strokeStyle = "#000000";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
     }
 
     function loop() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, W, H);
+
+      updateBars();
+      updateDart();
+
       drawBoard();
+      drawBars();
+      drawTargetMarker();
       drawDart();
-      update();
+
       requestAnimationFrame(loop);
     }
 
-    canvas.addEventListener("mousedown", e => {
+    canvas.addEventListener("click", () => {
       if (dart.flying) return;
-      isAiming = true;
-      aimStart = { x: e.offsetX, y: e.offsetY };
-    });
 
-    canvas.addEventListener("mouseup", e => {
-      if (!isAiming) return;
-      isAiming = false;
-      const dx = aimStart.x - e.offsetX;
-      const dy = aimStart.y - e.offsetY;
-      shootDart(dx, dy);
+      if (state === "chooseX") {
+        targetX = 40 + tX * (W - 80);
+        state = "chooseY";
+        statusDisplay.textContent = "Step 2: Click to lock vertical position.";
+      } else if (state === "chooseY") {
+        targetY = 40 + tY * (H - 120);
+        state = "flying";
+        statusDisplay.textContent = "Throwing...";
+        shootDart();
+      }
     });
 
     resetDart();
