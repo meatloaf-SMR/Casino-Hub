@@ -1,748 +1,419 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Casino Hub</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
+<meta charset="UTF-8">
+<title>Casino Game Hub</title>
 
-    body {
-      background: radial-gradient(circle at top, #031018, #020508 65%, #000 100%);
-      color: #f4f4f4;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 16px;
-    }
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, sans-serif;
+  }
 
-    h1 {
-      margin-bottom: 4px;
-    }
+  body {
+    background: radial-gradient(circle at top, #0b1924, #02070b 70%);
+    color: #f4f4f4;
+    padding: 30px;
+    min-height: 100vh;
+  }
 
-    #subtitle {
-      font-size: 13px;
-      opacity: 0.85;
-      margin-bottom: 14px;
-    }
+  /* ✅ Slide‑In Update Bar */
+  #updateBar {
+    width: 100%;
+    background: #ffffff;
+    color: #222;
+    padding: 12px 20px;
+    font-size: 18px;
+    border-bottom: 1px solid #ccc;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 9998;
+    display: none; /* hidden until startup gate closes */
+    align-items: center;
+    gap: 15px;
 
-    /* Update bar */
-    #updateBar {
-      width: 100%;
-      max-width: 1100px;
-      background: linear-gradient(90deg, #18212f, #10151f);
-      border-radius: 9px;
-      padding: 6px 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 12px;
-      border: 1px solid rgba(255,255,255,0.05);
-      box-shadow: 0 4px 14px rgba(0,0,0,0.5);
-      margin-bottom: 12px;
-    }
+    transform: translateY(-100%);
+    opacity: 0;
+    animation: slideDown 0.5s ease forwards;
+  }
 
-    #updateLabel {
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      font-size: 11px;
-      color: #f9d675;
-      margin-right: 8px;
-    }
+  @keyframes slideDown {
+    from { transform: translateY(-100%); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
 
-    #updateText {
-      flex: 1;
-      opacity: 0.9;
-    }
+  #updateText {
+    flex-grow: 1;
+    text-align: center;
+  }
 
-    #updateTime {
-      margin-left: 8px;
-      opacity: 0.65;
-      font-size: 11px;
-      white-space: nowrap;
-    }
+  #closeUpdate {
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #444;
+    padding: 0 5px;
+  }
 
-    /* Layout */
-    #mainWrapper {
-      width: 100%;
-      max-width: 1100px;
-      display: flex;
-      gap: 14px;
-      align-items: flex-start;
-    }
+  #closeUpdate:hover {
+    color: #000;
+  }
 
-    #leftCol {
-      flex: 1.4;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+  h1 {
+    text-align: center;
+    font-size: 48px;
+    letter-spacing: 4px;
+    margin-bottom: 30px;
+  }
 
-    #rightCol {
-      flex: 1.6;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+  .games {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 25px;
+    padding: 10px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
 
-    /* Game grid */
-    #gameGrid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
-    }
+  .card {
+    background: #0f2a38;
+    border: 3px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+  }
 
-    .gameCard {
-      background: radial-gradient(circle at top, #182233, #0e141f);
-      border-radius: 10px;
-      padding: 10px;
-      cursor: pointer;
-      border: 1px solid rgba(255,255,255,0.08);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.65);
-      transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
-    }
+  .card h2 {
+    margin-bottom: 10px;
+    font-size: 26px;
+  }
 
-    .gameCard:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 18px rgba(0,0,0,0.8);
-      border-color: rgba(255,255,255,0.25);
-    }
+  .card p {
+    margin-bottom: 15px;
+    opacity: 0.85;
+  }
 
-    .gameTitle {
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 3px;
-    }
+  .btn {
+    padding: 10px 20px;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    margin: 5px 0;
+    width: 100%;
+    background: radial-gradient(circle at top, #f9d675, #d8a73e);
+    color: #111;
+    box-shadow: 0 4px 0 #8a6220;
+    transition: 0.1s;
+  }
 
-    .gameDesc {
-      font-size: 12px;
-      opacity: 0.8;
-    }
+  .btn:hover {
+    filter: brightness(1.05);
+  }
 
-    /* Iframe */
-    #gameFrame {
-      width: 100%;
-      height: 480px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.12);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.75);
-      background: #05070a;
-    }
+  .btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #8a6220;
+  }
 
-    /* Bottom bar */
-    #bottomBar {
-      margin-top: 6px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 12px;
-      color: rgba(255,255,255,0.75);
-    }
+  #gameFrame {
+    width: 100%;
+    height: 700px;
+    border: none;
+    margin-top: 40px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    display: block;
+  }
 
-    #infoButton {
-      padding: 5px 10px;
-      border-radius: 999px;
-      border: none;
-      cursor: pointer;
-      background: #263145;
-      color: #f4f4f4;
-    }
+  /* ✅ Startup Gate */
+  #startupOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    color: white;
+    text-align: center;
+  }
 
-    /* Lock overlay */
-    #lockOverlay {
-      position: fixed;
-      inset: 0;
-      background: #ffffff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-    }
+  #startupOverlay h2 {
+    font-size: 36px;
+    margin-bottom: 20px;
+  }
 
-    #lockCard {
-      background: #f5f5f5;
-      border-radius: 10px;
-      padding: 16px 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-      text-align: center;
-      color: #111;
-      width: 260px;
-    }
+  #startupOverlay button {
+    padding: 15px 40px;
+    font-size: 22px;
+    margin: 10px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+  }
 
-    #lockTitle {
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
+  #studentBtn {
+    background: #f9d675;
+    color: #111;
+  }
 
-    #lockDesc {
-      font-size: 13px;
-      opacity: 0.8;
-      margin-bottom: 10px;
-    }
+  #teacherBtn {
+    background: #f66;
+    color: #111;
+  }
 
-    #lockInput {
-      width: 100%;
-      padding: 6px 8px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      outline: none;
-      margin-bottom: 8px;
-    }
+  /* ✅ Calculator Screen */
+  #calculatorScreen {
+    display: none;
+    background: #f4f4f4;
+    color: #111;
+    position: fixed;
+    inset: 0;
+    padding: 40px;
+    z-index: 99999;
+    overflow: auto;
+  }
 
-    #lockButton {
-      width: 100%;
-      padding: 6px 8px;
-      border-radius: 6px;
-      border: none;
-      background: #111;
-      color: #fff;
-      cursor: pointer;
-      font-size: 14px;
-    }
+  #calcBox {
+    max-width: 320px;
+    margin: 60px auto;
+    background: white;
+    padding: 25px;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
 
-    #lockError {
-      margin-top: 6px;
-      font-size: 12px;
-      color: #b00020;
-      min-height: 14px;
-    }
+  #calcDisplay {
+    width: 100%;
+    height: 60px;
+    font-size: 28px;
+    margin-bottom: 20px;
+    text-align: right;
+    padding: 10px 14px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    background: #fefefe;
+  }
 
-    /* Modals */
-    .modalOverlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.7);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 9000;
-    }
+  /* ✅ Square Calculator Buttons */
+  .calcGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
 
-    .modal {
-      background: #121722;
-      border-radius: 10px;
-      padding: 14px 16px;
-      width: 280px;
-      border: 1px solid rgba(255,255,255,0.15);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-    }
+  .calcBtn {
+    width: 100%;
+    padding: 14px 0;
+    font-size: 20px;
+    border: none;
+    background: #e0e0e0;
+    border-radius: 0; /* square */
+    cursor: pointer;
+    transition: background 0.2s;
+  }
 
-    .modalTitle {
-      font-weight: 600;
-      margin-bottom: 6px;
-      font-size: 15px;
-    }
+  .calcBtn:hover {
+    background: #d0d0d0;
+  }
 
-    .modalDesc {
-      font-size: 12px;
-      opacity: 0.85;
-      margin-bottom: 10px;
-    }
+  .calcBtn:active {
+    background: #bbb;
+  }
 
-    .modalInput {
-      width: 100%;
-      padding: 6px 8px;
-      border-radius: 6px;
-      border: 1px solid rgba(255,255,255,0.2);
-      background: #0b1018;
-      color: #f4f4f4;
-      outline: none;
-      font-size: 13px;
-      margin-bottom: 10px;
-    }
+  .calcBtn.wide {
+    grid-column: span 4;
+  }
+</style>
 
-    .modalButtonRow {
-      display: flex;
-      justify-content: flex-end;
-      gap: 6px;
-    }
-
-    .modalButton {
-      padding: 5px 10px;
-      border-radius: 999px;
-      border: none;
-      cursor: pointer;
-      font-size: 12px;
-    }
-
-    .modalButton.primary {
-      background: #f9d675;
-      color: #111;
-      box-shadow: 0 2px 0 #8a6220;
-    }
-
-    /* Avatar grid */
-    #avatarGrid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      margin-top: 6px;
-      margin-bottom: 10px;
-    }
-
-    .avatarOption {
-      width: 44px;
-      height: 44px;
-      border-radius: 7px;
-      background: #05070b;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      border: 1px solid rgba(255,255,255,0.2);
-      image-rendering: pixelated;
-      transition: transform 0.1s ease, border-color 0.1s ease, box-shadow 0.1s ease;
-    }
-
-    .avatarOption:hover {
-      transform: translateY(-1px);
-      border-color: #f9d675;
-      box-shadow: 0 0 0 1px rgba(249,214,117,0.4);
-    }
-
-    .avatarOption.selected {
-      border-color: #f9d675;
-      box-shadow: 0 0 0 1px rgba(249,214,117,0.7);
-    }
-
-    /* Info overlay */
-    #infoOverlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.75);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 8500;
-    }
-
-    #infoCard {
-      background: #121722;
-      border-radius: 10px;
-      padding: 16px 18px;
-      width: 320px;
-      border: 1px solid rgba(255,255,255,0.16);
-      box-shadow: 0 12px 32px rgba(0,0,0,0.85);
-    }
-
-    #infoTitle {
-      font-weight: 600;
-      margin-bottom: 6px;
-      font-size: 16px;
-    }
-
-    .infoRow {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin: 6px 0;
-      font-size: 13px;
-    }
-
-    .infoLabel {
-      opacity: 0.8;
-    }
-
-    .infoValue {
-      font-weight: 500;
-    }
-
-    .infoButton {
-      padding: 4px 8px;
-      border-radius: 999px;
-      border: none;
-      background: #263145;
-      color: #f4f4f4;
-      cursor: pointer;
-      font-size: 11px;
-      margin-left: 8px;
-    }
-
-    #infoClose {
-      margin-top: 10px;
-      width: 100%;
-      padding: 6px 0;
-      border-radius: 999px;
-      border: none;
-      background: #f9d675;
-      color: #111;
-      cursor: pointer;
-      font-size: 13px;
-    }
-
-    /* Panic overlay */
-    #panicOverlay {
-      position: fixed;
-      inset: 0;
-      background: #ffffff;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 10000;
-      color: #111;
-    }
-
-    #panicContent {
-      background: #f5f5f5;
-      border-radius: 10px;
-      padding: 16px 18px;
-      box-shadow: 0 12px 32px rgba(0,0,0,0.2);
-      width: 260px;
-      text-align: center;
-    }
-
-    #panicTitle {
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-
-    #panicDesc {
-      font-size: 13px;
-      opacity: 0.8;
-      margin-bottom: 8px;
-    }
-
-    #panicCloseHint {
-      font-size: 11px;
-      opacity: 0.7;
-    }
-
-    /* Avatar rendering */
-    .avatar-face {
-      width: 32px;
-      height: 32px;
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      grid-template-rows: repeat(7, 1fr);
-      image-rendering: pixelated;
-    }
-
-    .pixel {
-      width: 100%;
-      height: 100%;
-    }
-
-  </style>
 </head>
 <body>
-  <h1>Casino Hub</h1>
-  <div id="subtitle">A quiet little corner of games.</div>
 
-  <div id="updateBar">
-    <div id="updateLabel">Update</div>
-    <div id="updateText">Name + 8‑bit avatar system added. No layout changes.</div>
-    <div id="updateTime">Today</div>
-  </div>
+<!-- ✅ Update Bar -->
+<div id="updateBar">
+  <span id="updateText">Loading latest update…</span>
+  <button id="closeUpdate">✕</button>
+</div>
 
-  <div id="mainWrapper">
-    <div id="leftCol">
-      <div id="gameGrid">
-        <div class="gameCard" onclick="openGame('pool.html')">
-          <div class="gameTitle">Pool</div>
-          <div class="gameDesc">Classic table, clean physics.</div>
-        </div>
-        <div class="gameCard" onclick="openGame('minigolf.html')">
-          <div class="gameTitle">Mini Golf</div>
-          <div class="gameDesc">Endless procedural courses.</div>
-        </div>
-        <div class="gameCard" onclick="openGame('slots.html')">
-          <div class="gameTitle">Slots</div>
-          <div class="gameDesc">Simple spins, bright reels.</div>
-        </div>
-        <div class="gameCard" onclick="openGame('blackjack.html')">
-          <div class="gameTitle">Blackjack</div>
-          <div class="gameDesc">Hit, stand, and hold your nerve.</div>
-        </div>
-        <div class="gameCard" onclick="openGame('depthshard.html')">
-          <div class="gameTitle">Depthshard</div>
-          <div class="gameDesc">Atmospheric experimental project.</div>
-        </div>
-        <div class="gameCard" onclick="openGame('plagueSim.html')">
-          <div class="gameTitle">Sim Prototype</div>
-          <div class="gameDesc">Early systems testbed.</div>
-        </div>
-      </div>
-    </div>
+<!-- ✅ Calculator Panic Screen -->
+<div id="calculatorScreen">
+  <div id="calcBox">
+    <input id="calcDisplay" disabled>
 
-    <div id="rightCol">
-      <iframe id="gameFrame" src="" title="Game frame"></iframe>
+    <div class="calcGrid">
+      <button class="calcBtn" onclick="pressCalc('7')">7</button>
+      <button class="calcBtn" onclick="pressCalc('8')">8</button>
+      <button class="calcBtn" onclick="pressCalc('9')">9</button>
+      <button class="calcBtn" onclick="pressCalc('/')">÷</button>
 
-      <div id="bottomBar">
-        <button id="infoButton">Info</button>
-        <div id="bottomHint">Press Esc for calculator overlay.</div>
-      </div>
+      <button class="calcBtn" onclick="pressCalc('4')">4</button>
+      <button class="calcBtn" onclick="pressCalc('5')">5</button>
+      <button class="calcBtn" onclick="pressCalc('6')">6</button>
+      <button class="calcBtn" onclick="pressCalc('*')">×</button>
+
+      <button class="calcBtn" onclick="pressCalc('1')">1</button>
+      <button class="calcBtn" onclick="pressCalc('2')">2</button>
+      <button class="calcBtn" onclick="pressCalc('3')">3</button>
+      <button class="calcBtn" onclick="pressCalc('-')">−</button>
+
+      <button class="calcBtn" onclick="pressCalc('0')">0</button>
+      <button class="calcBtn" onclick="pressCalc('.')">.</button>
+      <button class="calcBtn" onclick="calculate()">=</button>
+      <button class="calcBtn" onclick="pressCalc('+')">+</button>
+
+      <button class="calcBtn wide" onclick="clearCalc()">Clear</button>
     </div>
   </div>
+</div>
 
-  <!-- Lock overlay -->
-  <div id="lockOverlay">
-    <div id="lockCard">
-      <div id="lockTitle">Enter Access Code</div>
-      <div id="lockDesc">Private workspace. Type the 3‑letter code.</div>
-      <input id="lockInput" type="password" maxlength="16" placeholder="Code" />
-      <button id="lockButton">Unlock</button>
-      <div id="lockError"></div>
-    </div>
+<!-- ✅ Casino Content -->
+<div id="casinoContent">
+
+  <!-- ✅ Startup Gate -->
+  <div id="startupOverlay">
+    <h2>Are you a student or a teacher?</h2>
+    <button id="studentBtn" onclick="startSite()">Student</button>
+    <button id="teacherBtn" onclick="closeSite()">Teacher</button>
   </div>
 
-  <!-- Name modal -->
-  <div id="nameModalOverlay" class="modalOverlay">
-    <div class="modal">
-      <div class="modalTitle">What’s your name?</div>
-      <div class="modalDesc">This is just for fun. You can change it later in the Info section.</div>
-      <input id="nameInput" class="modalInput" type="text" maxlength="20" placeholder="Type your name" />
-      <div class="modalButtonRow">
-        <button id="nameSaveButton" class="modalButton primary">Save</button>
-      </div>
+  <h1>Casino Game Hub</h1>
+
+  <div class="games">
+
+    <div class="card">
+      <h2>Blackjack</h2>
+      <p>Beat the dealer to 21.</p>
+      <button class="btn" onclick="openGame('blackjack.html')">Play</button>
     </div>
+
+    <div class="card">
+      <h2>Roulette</h2>
+      <p>Bet on red, black, or numbers.</p>
+      <button class="btn" onclick="openGame('roulette.html')">Play</button>
+    </div>
+
+    <div class="card">
+      <h2>Poker</h2>
+      <p>Classic Texas Hold'em.</p>
+      <button class="btn" onclick="openGame('poker.html')">Play</button>
+    </div>
+
+    <div class="card">
+      <h2>Pool</h2>
+      <p>8‑ball billiards physics.</p>
+      <button class="btn" onclick="openGame('pool.html')">Play</button>
+    </div>
+
+    <div class="card">
+      <h2>Air Hockey</h2>
+      <p>1P/2P fast arcade action.</p>
+      <button class="btn" onclick="openGame('air_hockey.html')">Play</button>
+    </div>
+
+    <div class="card">
+      <h2>Slot Machine</h2>
+      <p>Classic 3‑reel fruit machine.</p>
+      <button class="btn" onclick="openGame('slot_machine.html')">Play</button>
+    </div>
+
+    <div class="card">
+      <h2>Craps</h2>
+      <p>Classic dice table.</p>
+      <button class="btn" onclick="openGame('craps.html')">Play</button>
+    </div>
+
+    <div class="card">
+      <h2>Higher or Lower</h2>
+      <p>Guess the next roll.</p>
+      <button class="btn" onclick="openGame('higher_lower.html')">Play</button>
+    </div>
+
+    <div class="card">
+      <h2>Mini Golf</h2>
+      <p>Endless procedural golf.</p>
+      <button class="btn" onclick="openGame('mini_golf.html')">Play</button>
+    </div>
+
+    <div class="card">
+      <h2>Info</h2>
+      <p>Your local stats.</p>
+      <button class="btn" onclick="openGame('info.html')">Open</button>
+    </div>
+
   </div>
 
-  <!-- Avatar modal -->
-  <div id="avatarModalOverlay" class="modalOverlay">
-    <div class="modal">
-      <div class="modalTitle">Choose your avatar</div>
-      <div class="modalDesc">Pick a simple 8‑bit face. You can change this anytime in Info.</div>
-      <div id="avatarGrid"></div>
-      <div class="modalButtonRow">
-        <button id="avatarSaveButton" class="modalButton primary">Save</button>
-      </div>
-    </div>
-  </div>
+  <iframe id="gameFrame"></iframe>
 
-  <!-- Info overlay -->
-  <div id="infoOverlay">
-    <div id="infoCard">
-      <div id="infoTitle">Profile & Info</div>
+</div>
 
-      <div class="infoRow">
-        <div>
-          <span class="infoLabel">Name:&nbsp;</span>
-          <span class="infoValue" id="infoNameValue">Player</span>
-        </div>
-        <button class="infoButton" id="infoEditName">Edit name</button>
-      </div>
+<script>
+/* ✅ Load update text */
+fetch("./updates.txt")
+  .then(r => r.text())
+  .then(t => document.getElementById("updateText").textContent = t.trim())
+  .catch(() => document.getElementById("updateText").textContent = "No updates available.");
 
-      <div class="infoRow">
-        <div style="display:flex;align-items:center;gap:6px;">
-          <span class="infoLabel">Avatar:&nbsp;</span>
-          <div id="infoAvatarDisplay"></div>
-        </div>
-        <button class="infoButton" id="infoEditAvatar">Edit avatar</button>
-      </div>
+/* ✅ Close update bar */
+document.getElementById("closeUpdate").addEventListener("click", () => {
+  document.getElementById("updateBar").style.display = "none";
+});
 
-      <div class="infoRow">
-        <span class="infoLabel">Local only:</span>
-        <span class="infoValue">Everything is saved in this browser.</span>
-      </div>
+/* ✅ Game loader */
+function openGame(file) {
+  const frame = document.getElementById("gameFrame");
+  frame.src = file;
+  setTimeout(() => frame.scrollIntoView({ behavior: "smooth" }), 150);
+}
 
-      <button id="infoClose">Close</button>
-    </div>
-  </div>
+/* ✅ Startup Gate */
+function closeSite() {
+  window.location.href = "about:blank";
+}
 
-  <!-- Panic overlay -->
-  <div id="panicOverlay">
-    <div id="panicContent">
-      <div id="panicTitle">Calculator</div>
-      <div id="panicDesc">Quick cover screen. Type normally to keep up appearances.</div>
-      <div id="panicCloseHint">Press Esc again to return to the hub.</div>
-    </div>
-  </div>
+function startSite() {
+  document.getElementById("startupOverlay").style.display = "none";
 
-  <script>
-    const PASSWORD = "smr";
+  /* ✅ Show update bar after 300ms */
+  setTimeout(() => {
+    const bar = document.getElementById("updateBar");
+    bar.style.display = "flex";
+  }, 300);
+}
 
-    const lockOverlay = document.getElementById("lockOverlay");
-    
-  <script>
-    const PASSWORD = "smr";
+/* ✅ Panic Key */
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    document.getElementById("casinoContent").style.display = "none";
+    document.getElementById("calculatorScreen").style.display = "block";
+    history.pushState({}, "", "/calculator");
+  }
+});
 
-    const lockOverlay = document.getElementById("lockOverlay");
-    const lockInput = document.getElementById("lockInput");
-    const lockButton = document.getElementById("lockButton");
-    const lockError = document.getElementById("lockError");
+/* ✅ Calculator Logic */
+function pressCalc(v) {
+  document.getElementById("calcDisplay").value += v;
+}
 
-    const nameModalOverlay = document.getElementById("nameModalOverlay");
-    const nameInput = document.getElementById("nameInput");
-    const nameSaveButton = document.getElementById("nameSaveButton");
+function clearCalc() {
+  document.getElementById("calcDisplay").value = "";
+}
 
-    const avatarModalOverlay = document.getElementById("avatarModalOverlay");
-    const avatarGrid = document.getElementById("avatarGrid");
-    const avatarSaveButton = document.getElementById("avatarSaveButton");
+function calculate() {
+  try {
+    document.getElementById("calcDisplay").value =
+      eval(document.getElementById("calcDisplay").value);
+  } catch {
+    document.getElementById("calcDisplay").value = "Error";
+  }
+}
+</script>
 
-    const infoOverlay = document.getElementById("infoOverlay");
-    const infoNameValue = document.getElementById("infoNameValue");
-    const infoAvatarDisplay = document.getElementById("infoAvatarDisplay");
-    const infoEditName = document.getElementById("infoEditName");
-    const infoEditAvatar = document.getElementById("infoEditAvatar");
-    const infoClose = document.getElementById("infoClose");
-    const infoButton = document.getElementById("infoButton");
-
-    const panicOverlay = document.getElementById("panicOverlay");
-    const gameFrame = document.getElementById("gameFrame");
-
-    let playerName = null;
-    let playerAvatarIndex = null;
-    let selectedAvatarIndex = null;
-
-    function openGame(src) {
-      gameFrame.src = src;
-    }
-
-    /* ---------- Avatar definitions (12 simple 8-bit faces) ---------- */
-    const avatarPalette = [
-      "#ffb4b4","#ffd28c","#ffe28c","#c0ff8c",
-      "#8cd8ff","#c8b4ff","#ff8ccc","#ff9b73",
-      "#a0ffc8","#ffffff","#d3d3d3","#9090ff"
-    ];
-
-    const baseFacePattern = [
-      [0,0,1,1,1,0,0],
-      [0,1,1,1,1,1,0],
-      [1,1,2,1,2,1,1],
-      [1,1,1,1,1,1,1],
-      [1,1,3,3,3,1,1],
-      [0,1,1,1,1,1,0],
-      [0,0,1,1,1,0,0]
-    ];
-
-    function createAvatarElement(index) {
-      const faceColor = avatarPalette[index % avatarPalette.length];
-      const faceDiv = document.createElement("div");
-      faceDiv.className = "avatar-face";
-
-      for (let y = 0; y < 7; y++) {
-        for (let x = 0; x < 7; x++) {
-          const cell = baseFacePattern[y][x];
-          const pixel = document.createElement("div");
-          pixel.className = "pixel";
-          if (cell === 1) pixel.style.background = faceColor;
-          else if (cell === 2) pixel.style.background = "#000";
-          else if (cell === 3) pixel.style.background = "#660000";
-          else pixel.style.background = "transparent";
-          faceDiv.appendChild(pixel);
-        }
-      }
-      return faceDiv;
-    }
-
-    function populateAvatarGrid() {
-      avatarGrid.innerHTML = "";
-      for (let i = 0; i < 12; i++) {
-        const wrapper = document.createElement("div");
-        wrapper.className = "avatarOption";
-        wrapper.dataset.index = i.toString();
-        const avatarEl = createAvatarElement(i);
-        wrapper.appendChild(avatarEl);
-        wrapper.addEventListener("click", () => {
-          selectedAvatarIndex = i;
-          document.querySelectorAll(".avatarOption").forEach(el => {
-            el.classList.toggle("selected", parseInt(el.dataset.index) === i);
-          });
-        });
-        avatarGrid.appendChild(wrapper);
-      }
-    }
-
-    /* ---------- Lock logic ---------- */
-    function tryUnlock() {
-      const value = lockInput.value.trim();
-      if (value.toLowerCase() === PASSWORD) {
-        lockError.textContent = "";
-        lockOverlay.style.display = "none";
-        initializeProfileFlow();
-      } else {
-        lockError.textContent = "Incorrect code.";
-      }
-    }
-    lockButton.addEventListener("click", tryUnlock);
-    lockInput.addEventListener("keydown", e => { if (e.key === "Enter") tryUnlock(); });
-
-    /* ---------- Name & avatar flow ---------- */
-    function showNameModal() {
-      nameModalOverlay.style.display = "flex";
-      nameInput.value = playerName || "";
-      nameInput.focus();
-    }
-    function hideNameModal() { nameModalOverlay.style.display = "none"; }
-
-    function showAvatarModal() {
-      populateAvatarGrid();
-      if (playerAvatarIndex != null) {
-        selectedAvatarIndex = playerAvatarIndex;
-        document.querySelectorAll(".avatarOption").forEach(el => {
-          el.classList.toggle("selected", parseInt(el.dataset.index) === playerAvatarIndex);
-        });
-      }
-      avatarModalOverlay.style.display = "flex";
-    }
-    function hideAvatarModal() { avatarModalOverlay.style.display = "none"; }
-
-    nameSaveButton.addEventListener("click", () => {
-      const val = nameInput.value.trim();
-      if (!val) return;
-      playerName = val;
-      localStorage.setItem("playerName", playerName);
-      hideNameModal();
-      if (playerAvatarIndex == null) showAvatarModal();
-    });
-    nameInput.addEventListener("keydown", e => { if (e.key === "Enter") nameSaveButton.click(); });
-
-    avatarSaveButton.addEventListener("click", () => {
-      if (selectedAvatarIndex == null) return;
-      playerAvatarIndex = selectedAvatarIndex;
-      localStorage.setItem("playerAvatarIndex", playerAvatarIndex.toString());
-      hideAvatarModal();
-    });
-
-    /* ---------- Info overlay ---------- */
-    infoButton.addEventListener("click", () => { openInfo(); });
-    infoClose.addEventListener("click", () => { infoOverlay.style.display = "none"; });
-    infoEditName.addEventListener("click", () => { infoOverlay.style.display = "none"; showNameModal(); });
-    infoEditAvatar.addEventListener("click", () => { infoOverlay.style.display = "none"; showAvatarModal(); });
-
-    function openInfo() {
-      refreshInfoUI();
-      infoOverlay.style.display = "flex";
-    }
-
-    function refreshInfoUI() {
-      infoNameValue.textContent = playerName || "Player";
-      infoAvatarDisplay.innerHTML = "";
-      if (playerAvatarIndex != null) {
-        infoAvatarDisplay.appendChild(createAvatarElement(playerAvatarIndex));
-      }
-    }
-
-    /* ---------- Panic overlay ---------- */
-    document.addEventListener("keydown", e => {
-      if (e.key === "Escape") {
-        panicOverlay.style.display = (panicOverlay.style.display === "flex") ? "none" : "flex";
-      }
-    });
-
-    /* ---------- Initialization ---------- */
-    function initializeProfileFlow() {
-      playerName = localStorage.getItem("playerName");
-      const storedAvatarIndex = localStorage.getItem("playerAvatarIndex");
-      playerAvatarIndex = storedAvatarIndex != null ? parseInt(storedAvatarIndex) : null;
-      if (!playerName) {
-        showNameModal();
-      } else if (playerAvatarIndex == null) {
-        showAvatarModal();
-      }
-    }
-
-    window.addEventListener("load", () => {
-      lockOverlay.style.display = "flex";
-      gameFrame.src = "";
-    });
-  </script>
 </body>
 </html>
