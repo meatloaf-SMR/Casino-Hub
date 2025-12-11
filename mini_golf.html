@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mini Golf</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at top, #0b1924, #02070b 70%);
+      color: #f4f4f4;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 6px;
+    }
+
+    #topBar {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    #info {
+      font-size: 13px;
+      opacity: 0.9;
+      margin-bottom: 8px;
+    }
+
+    #golfCanvas {
+      background: #0f5b30;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+      border: 18px solid #5b3a1a;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mini Golf</h1>
+
+  <div id="topBar">
+    <span id="holeDisplay">Hole: 1</span>
+    <span id="strokeDisplay">Strokes this hole: 0</span>
+    <span id="totalStrokeDisplay">Total strokes: 0</span>
+  </div>
+
+  <div id="info">Click and drag from the ball to aim and shoot. Sink it to generate a new random hole.</div>
+
+  <canvas id="golfCanvas" width="800" height="450"></canvas>
+
+  <script>
+    const canvas = document.getElementById("golfCanvas");
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width;
+    const H = canvas.height;
+
+    const holeDisplay = document.getElementById("holeDisplay");
+    const strokeDisplay = document.getElementById("strokeDisplay");
+    const totalStrokeDisplay = document.getElementById("totalStrokeDisplay");
+
+    const BALL_RADIUS = 8;
+    const HOLE_RADIUS = 10;
+    const FRICTION = 0.992;
+    const STOP_THRESHOLD = 0.03;
+
+    let ball = { x: 0, y: 0, vx: 0, vy: 0, moving: false };
+    let hole = { x: 0, y: 0 };
+    let walls = []; // each: { x1, y1, x2, y2 }
+
+    let isAiming = false;
+    let mousePos = { x: 0, y: 0 };
+
+    let strokesThisHole = 0;
+    let totalStrokes = 0;
+    let holeNumber = 1;
+
+    function rand(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function updateHUD() {
+      holeDisplay.textContent = "Hole: " + holeNumber;
+      strokeDisplay.textContent = "Strokes this hole: " + strokesThisHole;
+      totalStrokeDisplay.textContent = "Total strokes: " + totalStrokes;
+    }
+
+    function generateHole() {
+      walls = [];
+      strokesThisHole = 0;
+      updateHUD();
+
+      ball.x = rand(80, 160);
+      ball.y = rand(80, H - 80);
+      ball.vx = 0;
+      ball.vy = 0;
+      ball.moving = false;
+
+      hole.x = rand(W - 200, W - 80);
+      hole.y = rand(80, H - 80);
+
+      const wallCount = 3 + Math.floor(Math.random() * 4);
+
+      for (let i = 0; i < wallCount; i++) {
+        const vertical = Math.random() < 0.5;
+        if (vertical) {
+          const x = rand(200, W - 200);
+          const gapY = rand(100, H - 100);
+          const gapSize = 80;
+
+          walls.push({ x1: x, y1: 50, x2: x, y2: gapY - gapSize / 2 });
+          walls.push({ x1: x, y1: gapY + gapSize / 2, x2: x, y2: H - 50 });
+        } else {
+          const y = rand(100, H - 100);
+          const gapX = rand(200, W - 200);
+          const gapSize = 80;
+
+          walls.push({ x1: 50, y1: y, x2: gapX - gapSize / 2, y2: y });
+          walls.push({ x1: gapX + gapSize / 2, y1: y, x2: W - 50, y2: y });
+        }
+      }
+    }
+
+    function allStopped() {
+      return Math.hypot(ball.vx, ball.vy) < STOP_THRESHOLD;
+    }
+
+    function getMousePos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      return {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY
+      };
+    }
+
+    canvas.addEventListener("mousedown", (e) => {
+      if (!allStopped()) return;
+
+      const m = getMousePos(e);
+      const dx = m.x - ball.x;
+      const dy = m.y - ball.y;
+      const dist = Math.hypot(dx, dy);
+
+      if (dist <= BALL_RADIUS + 12) {
+        isAiming = true;
+        mousePos = m;
+      }
+    });
+
+    canvas.addEventListener("mousemove", (e) => {
+      if (!isAiming) return;
+      mousePos = getMousePos(e);
+    });
+
+    canvas.addEventListener("mouseup", () => {
+      if (!isAiming) return;
+      isAiming = false;
+
+      const dx = mousePos.x - ball.x;
+      const dy = mousePos.y - ball.y;
+
+      const distance = Math.hypot(dx, dy);
+      if (distance === 0) return;
+
+      const angle = Math.atan2(dy, dx);
+
+      const maxPull = 160;
+      const power = Math.min(distance, maxPull) / 10;
+
+      ball.vx = -Math.cos(angle) * power;
+      ball.vy = -Math.sin(angle) * power;
+      ball.moving = true;
+
+      strokesThisHole++;
+      totalStrokes++;
+      updateHUD();
+    });
+
+    function reflectBall(normalX, normalY) {
+      const dot = ball.vx * normalX + ball.vy * normalY;
+      ball.vx = ball.vx - 2 * dot * normalX;
+      ball.vy = ball.vy - 2 * dot * normalY;
+
+      ball.vx *= 0.9;
+      ball.vy *= 0.9;
+    }
+
+    function distancePointToSegment(px, py, x1, y1, x2, y2) {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      if (dx === 0 && dy === 0) {
+        const ddx = px - x1;
+        const ddy = py - y1;
+        return Math.hypot(ddx, ddy);
+      }
+      const t = ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy);
+      const tt = Math.max(0, Math.min(1, t));
+      const projX = x1 + tt * dx;
+      const projY = y1 + tt * dy;
+      return Math.hypot(px - projX, py - projY);
+    }
+
+    function handleWallCollisions() {
+      for (const w of walls) {
+        const dist = distancePointToSegment(ball.x, ball.y, w.x1, w.y1, w.x2, w.y2);
+        if (dist < BALL_RADIUS + 1) {
+          const dx = w.x2 - w.x1;
+          const dy = w.y2 - w.y1;
+          const len = Math.hypot(dx, dy) || 1;
+          const nx = -dy / len;
+          const ny = dx / len;
+
+          ball.x += nx * (BALL_RADIUS + 1 - dist);
+          ball.y += ny * (BALL_RADIUS + 1 - dist);
+
+          reflectBall(nx, ny);
+        }
+      }
+    }
+
+    function physicsStep() {
+      if (!ball.moving && allStopped()) return;
+
+      ball.x += ball.vx;
+      ball.y += ball.vy;
+      ball.vx *= FRICTION;
+      ball.vy *= FRICTION;
+
+      if (Math.abs(ball.vx) < STOP_THRESHOLD) ball.vx = 0;
+      if (Math.abs(ball.vy) < STOP_THRESHOLD) ball.vy = 0;
+
+      if (ball.x - BALL_RADIUS < 30) { ball.x = 30 + BALL_RADIUS; ball.vx *= -0.9; }
+      if (ball.x + BALL_RADIUS > W - 30) { ball.x = W - 30 - BALL_RADIUS; ball.vx *= -0.9; }
+      if (ball.y - BALL_RADIUS < 30) { ball.y = 30 + BALL_RADIUS; ball.vy *= -0.9; }
+      if (ball.y + BALL_RADIUS > H - 30) { ball.y = H - 30 - BALL_RADIUS; ball.vy *= -0.9; }
+
+      handleWallCollisions();
+
+      const dxh = ball.x - hole.x;
+      const dyh = ball.y - hole.y;
+      const distHole = Math.hypot(dxh, dyh);
+      if (distHole < HOLE_RADIUS - 2 && Math.hypot(ball.vx, ball.vy) < 1.0) {
+        ball.x = hole.x;
+        ball.y = hole.y;
+        ball.vx = 0;
+        ball.vy = 0;
+        ball.moving = false;
+
+        setTimeout(() => {
+          holeNumber++;
+          generateHole();
+        }, 600);
+      }
+    }
+
+    function drawCourse() {
+      ctx.fillStyle = "#0f5b30";
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.strokeStyle = "#09381d";
+      ctx.lineWidth = 18;
+      ctx.strokeRect(25, 25, W - 50, H - 50);
+
+      ctx.strokeStyle = "#072514";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(25, 25, W - 50, H - 50);
+
+      ctx.strokeStyle = "#083c20";
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(50, ball.y);
+      ctx.lineTo(ball.x, ball.y);
+      ctx.stroke();
+    }
+
+    function drawWalls() {
+      ctx.strokeStyle = "#0b3019";
+      ctx.lineWidth = 6;
+      ctx.lineCap = "round";
+      walls.forEach(w => {
+        ctx.beginPath();
+        ctx.moveTo(w.x1, w.y1);
+        ctx.lineTo(w.x2, w.y2);
+        ctx.stroke();
+      });
+    }
+
+    function drawHole() {
+      ctx.beginPath();
+      ctx.arc(hole.x, hole.y, HOLE_RADIUS, 0, Math.PI * 2);
+      ctx.fillStyle = "#000000";
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(hole.x, hole.y, HOLE_RADIUS - 3, 0, Math.PI * 2);
+      ctx.fillStyle = "#111111";
+      ctx.fill();
+    }
+
+    function drawBall() {
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, BALL_RADIUS, 0, Math.PI * 2);
+      ctx.fillStyle = "#f5f5f5";
+      ctx.fill();
+      ctx.strokeStyle = "#bbbbbb";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    function drawAimLine() {
+      if (!isAiming || !allStopped()) return;
+
+      const dx = mousePos.x - ball.x;
+      const dy = mousePos.y - ball.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist === 0) return;
+
+      const maxPull = 160;
+      const clamped = Math.min(dist, maxPull);
+
+      const angle = Math.atan2(dy, dx);
+      const ex = ball.x - Math.cos(angle) * clamped;
+      const ey = ball.y - Math.sin(angle) * clamped;
+
+      ctx.strokeStyle = "rgba(255,255,255,0.8)";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([10, 6]);
+
+      ctx.beginPath();
+      ctx.moveTo(ball.x, ball.y);
+      ctx.lineTo(ex, ey);
+      ctx.stroke();
+
+      ctx.setLineDash([]);
+    }
+
+    function loop() {
+      physicsStep();
+
+      ctx.clearRect(0, 0, W, H);
+      drawCourse();
+      drawWalls();
+      drawHole();
+      drawBall();
+      drawAimLine();
+
+      requestAnimationFrame(loop);
+    }
+
+    generateHole();
+    loop();
+  </script>
+</body>
+</html>
