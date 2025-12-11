@@ -31,15 +31,10 @@
       margin-bottom: 14px;
     }
 
-    /* Top bar with update banner */
-    #topBar {
-      width: 100%;
-      max-width: 1100px;
-      margin-bottom: 10px;
-    }
-
+    /* Update bar */
     #updateBar {
       width: 100%;
+      max-width: 1100px;
       background: linear-gradient(90deg, #18212f, #10151f);
       border-radius: 9px;
       padding: 6px 10px;
@@ -49,6 +44,7 @@
       font-size: 12px;
       border: 1px solid rgba(255,255,255,0.05);
       box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+      margin-bottom: 12px;
     }
 
     #updateLabel {
@@ -72,7 +68,7 @@
       white-space: nowrap;
     }
 
-    /* Layout wrapper */
+    /* Layout */
     #mainWrapper {
       width: 100%;
       max-width: 1100px;
@@ -81,7 +77,6 @@
       align-items: flex-start;
     }
 
-    /* Left column (profile card + game grid) */
     #leftCol {
       flex: 1.4;
       display: flex;
@@ -89,75 +84,11 @@
       gap: 10px;
     }
 
-    /* Right column (iframe) */
     #rightCol {
       flex: 1.6;
       display: flex;
       flex-direction: column;
       gap: 8px;
-    }
-
-    /* Profile card above game grid */
-    #profileCard {
-      background: linear-gradient(135deg, #131a26, #0a1018);
-      border-radius: 10px;
-      padding: 10px 12px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      border: 1px solid rgba(255,255,255,0.06);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.6);
-    }
-
-    #avatarDisplay {
-      width: 48px;
-      height: 48px;
-      image-rendering: pixelated;
-      background: #111;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-
-    .avatar-face {
-      width: 28px;
-      height: 28px;
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      grid-template-rows: repeat(7, 1fr);
-    }
-
-    .pixel {
-      width: 100%;
-      height: 100%;
-    }
-
-    #profileInfo {
-      flex: 1;
-    }
-
-    #profileName {
-      font-size: 15px;
-      font-weight: 600;
-    }
-
-    #profileSubtitle {
-      font-size: 12px;
-      opacity: 0.8;
-    }
-
-    #profileButton {
-      padding: 5px 10px;
-      border-radius: 999px;
-      border: none;
-      font-size: 12px;
-      cursor: pointer;
-      background: #f9d675;
-      color: #111;
-      box-shadow: 0 2px 0 #8a6220;
-      white-space: nowrap;
     }
 
     /* Game grid */
@@ -204,7 +135,7 @@
       background: #05070a;
     }
 
-    /* Bottom row (Info button, etc.) */
+    /* Bottom bar */
     #bottomBar {
       margin-top: 6px;
       display: flex;
@@ -283,7 +214,7 @@
       min-height: 14px;
     }
 
-    /* Name modal */
+    /* Modals */
     .modalOverlay {
       position: fixed;
       inset: 0;
@@ -347,7 +278,7 @@
       box-shadow: 0 2px 0 #8a6220;
     }
 
-    /* Avatar modal */
+    /* Avatar grid */
     #avatarGrid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -446,7 +377,7 @@
       font-size: 13px;
     }
 
-    /* Calculator panic overlay (placeholder) */
+    /* Panic overlay */
     #panicOverlay {
       position: fixed;
       inset: 0;
@@ -483,35 +414,34 @@
       opacity: 0.7;
     }
 
+    /* Avatar rendering */
+    .avatar-face {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      grid-template-rows: repeat(7, 1fr);
+    }
+
+    .pixel {
+      width: 100%;
+      height: 100%;
+    }
+
   </style>
 </head>
 <body>
   <h1>Casino Hub</h1>
   <div id="subtitle">A quiet little corner of games.</div>
 
-  <div id="topBar">
-    <div id="updateBar">
-      <div id="updateLabel">Update</div>
-      <div id="updateText">Welcome back. New profile system with name and 8‑bit avatar added.</div>
-      <div id="updateTime" id="updateTimeText">Today</div>
-    </div>
+  <div id="updateBar">
+    <div id="updateLabel">Update</div>
+    <div id="updateText">Name + 8‑bit avatar system added. No layout changes.</div>
+    <div id="updateTime">Today</div>
   </div>
 
   <div id="mainWrapper">
     <div id="leftCol">
-      <!-- Profile card -->
-      <div id="profileCard">
-        <div id="avatarDisplay">
-          <!-- Avatar face will be rendered here -->
-        </div>
-        <div id="profileInfo">
-          <div id="profileName">Player</div>
-          <div id="profileSubtitle">Tap Profile to see your info.</div>
-        </div>
-        <button id="profileButton">Profile</button>
-      </div>
-
-      <!-- Game grid -->
       <div id="gameGrid">
         <div class="gameCard" onclick="openGame('pool.html')">
           <div class="gameTitle">Pool</div>
@@ -525,397 +455,4 @@
           <div class="gameTitle">Slots</div>
           <div class="gameDesc">Simple spins, bright reels.</div>
         </div>
-        <div class="gameCard" onclick="openGame('blackjack.html')">
-          <div class="gameTitle">Blackjack</div>
-          <div class="gameDesc">Hit, stand, and hold your nerve.</div>
-        </div>
-        <div class="gameCard" onclick="openGame('depthshard.html')">
-          <div class="gameTitle">Depthshard</div>
-          <div class="gameDesc">Atmospheric experimental project.</div>
-        </div>
-        <div class="gameCard" onclick="openGame('plagueSim.html')">
-          <div class="gameTitle">Sim Prototype</div>
-          <div class="gameDesc">Early systems testbed.</div>
-        </div>
-      </div>
-    </div>
-
-    <div id="rightCol">
-      <iframe id="gameFrame" src="" title="Game frame"></iframe>
-
-      <div id="bottomBar">
-        <button id="infoButton">Info</button>
-        <div id="bottomHint">Press Esc for calculator overlay.</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Lock overlay -->
-  <div id="lockOverlay">
-    <div id="lockCard">
-      <div id="lockTitle">Enter Access Code</div>
-      <div id="lockDesc">Private workspace. Type the 3‑letter code.</div>
-      <input id="lockInput" type="password" maxlength="16" placeholder="Code" />
-      <button id="lockButton">Unlock</button>
-      <div id="lockError"></div>
-    </div>
-  </div>
-
-  <!-- Name modal -->
-  <div id="nameModalOverlay" class="modalOverlay">
-    <div class="modal">
-      <div class="modalTitle">What’s your name?</div>
-      <div class="modalDesc">This is just for fun. You can change it later in the Info section.</div>
-      <input id="nameInput" class="modalInput" type="text" maxlength="20" placeholder="Type your name" />
-      <div class="modalButtonRow">
-        <button id="nameSaveButton" class="modalButton primary">Save</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Avatar modal -->
-  <div id="avatarModalOverlay" class="modalOverlay">
-    <div class="modal">
-      <div class="modalTitle">Choose your avatar</div>
-      <div class="modalDesc">Pick a simple 8‑bit face. You can change this anytime in Info.</div>
-      <div id="avatarGrid"></div>
-      <div class="modalButtonRow">
-        <button id="avatarSaveButton" class="modalButton primary">Save</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Info overlay -->
-  <div id="infoOverlay">
-    <div id="infoCard">
-      <div id="infoTitle">Profile & Info</div>
-
-      <div class="infoRow">
-        <div>
-          <span class="infoLabel">Name:&nbsp;</span>
-          <span class="infoValue" id="infoNameValue">Player</span>
-        </div>
-        <button class="infoButton" id="infoEditName">Edit name</button>
-      </div>
-
-      <div class="infoRow">
-        <div>
-          <span class="infoLabel">Avatar:&nbsp;</span>
-          <span class="infoValue">8‑bit face</span>
-        </div>
-        <button class="infoButton" id="infoEditAvatar">Edit avatar</button>
-      </div>
-
-      <div class="infoRow">
-        <span class="infoLabel">Local only:</span>
-        <span class="infoValue">Everything is saved in this browser.</span>
-      </div>
-
-      <button id="infoClose">Close</button>
-    </div>
-  </div>
-
-  <!-- Panic / calculator overlay (placeholder content) -->
-  <div id="panicOverlay">
-    <div id="panicContent">
-      <div id="panicTitle">Calculator</div>
-      <div id="panicDesc">Quick cover screen. Type normally to keep up appearances.</div>
-      <div id="panicCloseHint">Press Esc again to return to the hub.</div>
-    </div>
-  </div>
-
-  <script>
-    const PASSWORD = "smr";
-
-    const lockOverlay = document.getElementById("lockOverlay");
-    const lockInput = document.getElementById("lockInput");
-    const lockButton = document.getElementById("lockButton");
-    const lockError = document.getElementById("lockError");
-
-    const nameModalOverlay = document.getElementById("nameModalOverlay");
-    const nameInput = document.getElementById("nameInput");
-    const nameSaveButton = document.getElementById("nameSaveButton");
-
-    const avatarModalOverlay = document.getElementById("avatarModalOverlay");
-    const avatarGrid = document.getElementById("avatarGrid");
-    const avatarSaveButton = document.getElementById("avatarSaveButton");
-
-    const profileName = document.getElementById("profileName");
-    const profileSubtitle = document.getElementById("profileSubtitle");
-    const avatarDisplay = document.getElementById("avatarDisplay");
-    const profileButton = document.getElementById("profileButton");
-
-    const infoOverlay = document.getElementById("infoOverlay");
-    const infoNameValue = document.getElementById("infoNameValue");
-    const infoEditName = document.getElementById("infoEditName");
-    const infoEditAvatar = document.getElementById("infoEditAvatar");
-    const infoClose = document.getElementById("infoClose");
-    const infoButton = document.getElementById("infoButton");
-
-    const panicOverlay = document.getElementById("panicOverlay");
-
-    const gameFrame = document.getElementById("gameFrame");
-
-    let playerName = null;
-    let playerAvatarIndex = null;
-    let selectedAvatarIndex = null;
-
-    function openGame(src) {
-      gameFrame.src = src;
-    }
-
-    /* ---------- Avatar definitions (12 simple 8-bit faces) ---------- */
-
-    const avatarPalette = [
-      "#ffb4b4", // 0 pinkish
-      "#ffd28c", // 1 peach
-      "#ffe28c", // 2 pale gold
-      "#c0ff8c", // 3 greenish
-      "#8cd8ff", // 4 light blue
-      "#c8b4ff", // 5 lavender
-      "#ff8ccc", // 6 hot pink
-      "#ff9b73", // 7 orange
-      "#a0ffc8", // 8 mint
-      "#ffffff", // 9 white
-      "#d3d3d3", // 10 light gray
-      "#9090ff"  // 11 periwinkle
-    ];
-
-    // Each face is a 7x7 layout with:
-    // 0 = transparent, 1 = skin color, 2 = eye, 3 = mouth
-    const baseFacePattern = [
-      [0,0,1,1,1,0,0],
-      [0,1,1,1,1,1,0],
-      [1,1,2,1,2,1,1],
-      [1,1,1,1,1,1,1],
-      [1,1,3,3,3,1,1],
-      [0,1,1,1,1,1,0],
-      [0,0,1,1,1,0,0]
-    ];
-
-    function createAvatarElement(index, sizeCells = 7) {
-      const faceColor = avatarPalette[index % avatarPalette.length];
-      const faceDiv = document.createElement("div");
-      faceDiv.className = "avatar-face";
-
-      for (let y = 0; y < sizeCells; y++) {
-        for (let x = 0; x < sizeCells; x++) {
-          const cell = baseFacePattern[y][x];
-          const pixel = document.createElement("div");
-          pixel.className = "pixel";
-
-          if (cell === 1) {
-            pixel.style.background = faceColor;
-          } else if (cell === 2) {
-            pixel.style.background = "#000000";
-          } else if (cell === 3) {
-            pixel.style.background = "#660000";
-          } else {
-            pixel.style.background = "transparent";
-          }
-
-          faceDiv.appendChild(pixel);
-        }
-      }
-
-      return faceDiv;
-    }
-
-    function renderAvatarInDisplay(index) {
-      avatarDisplay.innerHTML = "";
-      if (index == null) return;
-      const avatarEl = createAvatarElement(index);
-      avatarDisplay.appendChild(avatarEl);
-    }
-
-    function populateAvatarGrid() {
-      avatarGrid.innerHTML = "";
-      for (let i = 0; i < 12; i++) {
-        const wrapper = document.createElement("div");
-        wrapper.className = "avatarOption";
-        wrapper.dataset.index = i.toString();
-
-        const avatarEl = createAvatarElement(i);
-        wrapper.appendChild(avatarEl);
-
-        wrapper.addEventListener("click", () => {
-          selectedAvatarIndex = i;
-          document.querySelectorAll(".avatarOption").forEach(el => {
-            el.classList.toggle("selected", parseInt(el.dataset.index) === i);
-          });
-        });
-
-        avatarGrid.appendChild(wrapper);
-      }
-    }
-
-    /* ---------- Lock logic ---------- */
-
-    function tryUnlock() {
-      const value = lockInput.value.trim();
-      if (value.toLowerCase() === PASSWORD) {
-        lockError.textContent = "";
-        lockOverlay.style.display = "none";
-        // Once unlocked, check for name/avatar and show onboarding if missing
-        initializeProfileFlow();
-      } else {
-        lockError.textContent = "Incorrect code.";
-      }
-    }
-
-    lockButton.addEventListener("click", tryUnlock);
-    lockInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        tryUnlock();
-      }
-    });
-
-    /* ---------- Name & avatar flow ---------- */
-
-    function showNameModal() {
-      nameModalOverlay.style.display = "flex";
-      nameInput.value = playerName || "";
-      nameInput.focus();
-    }
-
-    function hideNameModal() {
-      nameModalOverlay.style.display = "none";
-    }
-
-    function showAvatarModal() {
-      populateAvatarGrid();
-      // pre-select current avatar if exists
-      if (playerAvatarIndex != null) {
-        selectedAvatarIndex = playerAvatarIndex;
-        document.querySelectorAll(".avatarOption").forEach(el => {
-          el.classList.toggle(
-            "selected",
-            parseInt(el.dataset.index) === playerAvatarIndex
-          );
-        });
-      } else {
-        selectedAvatarIndex = null;
-      }
-      avatarModalOverlay.style.display = "flex";
-    }
-
-    function hideAvatarModal() {
-      avatarModalOverlay.style.display = "none";
-    }
-
-    nameSaveButton.addEventListener("click", () => {
-      const val = nameInput.value.trim();
-      if (!val) return;
-      playerName = val;
-      localStorage.setItem("playerName", playerName);
-      hideNameModal();
-      // After name, go to avatar if missing
-      if (playerAvatarIndex == null) {
-        showAvatarModal();
-      } else {
-        refreshProfileUI();
-      }
-    });
-
-    nameInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        nameSaveButton.click();
-      }
-    });
-
-    avatarSaveButton.addEventListener("click", () => {
-      if (selectedAvatarIndex == null) return;
-      playerAvatarIndex = selectedAvatarIndex;
-      localStorage.setItem("playerAvatarIndex", playerAvatarIndex.toString());
-      hideAvatarModal();
-      refreshProfileUI();
-    });
-
-    /* ---------- Info overlay ---------- */
-
-    infoButton.addEventListener("click", () => {
-      openInfo();
-    });
-
-    profileButton.addEventListener("click", () => {
-      openInfo();
-    });
-
-    function openInfo() {
-      refreshProfileUI();
-      infoOverlay.style.display = "flex";
-    }
-
-    infoClose.addEventListener("click", () => {
-      infoOverlay.style.display = "none";
-    });
-
-    infoEditName.addEventListener("click", () => {
-      infoOverlay.style.display = "none";
-      showNameModal();
-    });
-
-    infoEditAvatar.addEventListener("click", () => {
-      infoOverlay.style.display = "none";
-      showAvatarModal();
-    });
-
-    /* ---------- Profile UI ---------- */
-
-    function refreshProfileUI() {
-      // Name
-      const nameToUse = playerName || "Player";
-      profileName.textContent = nameToUse;
-      infoNameValue.textContent = nameToUse;
-
-      // Subtitle
-      profileSubtitle.textContent = "Welcome back.";
-
-      // Avatar
-      if (playerAvatarIndex != null) {
-        renderAvatarInDisplay(playerAvatarIndex);
-      } else {
-        avatarDisplay.innerHTML = "";
-      }
-    }
-
-    /* ---------- Panic overlay (Esc key) ---------- */
-
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") {
-        if (panicOverlay.style.display === "flex") {
-          panicOverlay.style.display = "none";
-        } else {
-          panicOverlay.style.display = "flex";
-        }
-      }
-    });
-
-    /* ---------- Initialization ---------- */
-
-    function initializeProfileFlow() {
-      playerName = localStorage.getItem("playerName");
-      const storedAvatarIndex = localStorage.getItem("playerAvatarIndex");
-      playerAvatarIndex = storedAvatarIndex != null ? parseInt(storedAvatarIndex) : null;
-
-      // If no name or avatar, run initial setup once
-      if (!playerName) {
-        showNameModal();
-      } else if (playerAvatarIndex == null) {
-        // Name exists but no avatar (e.g., added later)
-        refreshProfileUI();
-        showAvatarModal();
-      } else {
-        refreshProfileUI();
-      }
-    }
-
-    // On page load: show lock. Only after unlock do we start profile flow.
-    window.addEventListener("load", () => {
-      lockOverlay.style.display = "flex";
-      // Game frame starts empty
-      gameFrame.src = "";
-    });
-  </script>
-</body>
-</html>
+        <div class="gameCard" onclick="openGame
