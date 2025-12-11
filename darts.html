@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Darts</title>
+  <style>
+    body {
+      background: radial-gradient(circle at top, #0b1924, #02070b 70%);
+      color: #f4f4f4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      font-family: system-ui, sans-serif;
+    }
+    h1 { margin-bottom: 10px; }
+    #score { margin-bottom: 10px; font-size: 16px; }
+    canvas {
+      background: #222;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    }
+  </style>
+</head>
+<body>
+  <h1>Darts</h1>
+  <div id="score">Score: 0</div>
+  <canvas id="dartCanvas" width="500" height="500"></canvas>
+
+  <script>
+    const canvas = document.getElementById("dartCanvas");
+    const ctx = canvas.getContext("2d");
+    const scoreDisplay = document.getElementById("score");
+
+    let score = 0;
+    let isAiming = false;
+    let aimStart = null;
+    let dart = null;
+
+    function drawBoard() {
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      const rings = [
+        { r: 200, color: "#006400", points: 10 },
+        { r: 150, color: "#228B22", points: 25 },
+        { r: 100, color: "#32CD32", points: 50 },
+        { r: 50,  color: "#FFD700", points: 100 }
+      ];
+      rings.forEach(ring => {
+        ctx.beginPath();
+        ctx.arc(cx, cy, ring.r, 0, Math.PI * 2);
+        ctx.fillStyle = ring.color;
+        ctx.fill();
+      });
+      ctx.beginPath();
+      ctx.arc(cx, cy, 10, 0, Math.PI * 2);
+      ctx.fillStyle = "#FF0000";
+      ctx.fill();
+    }
+
+    function drawDart() {
+      if (!dart) return;
+      ctx.beginPath();
+      ctx.arc(dart.x, dart.y, 6, 0, Math.PI * 2);
+      ctx.fillStyle = "#fff";
+      ctx.fill();
+      ctx.strokeStyle = "#000";
+      ctx.stroke();
+    }
+
+    function resetDart() {
+      dart = { x: canvas.width / 2, y: canvas.height - 20, vx: 0, vy: 0, flying: false };
+    }
+
+    function shootDart(dx, dy) {
+      dart.vx = dx / 15;
+      dart.vy = dy / 15;
+      dart.flying = true;
+    }
+
+    function update() {
+      if (dart && dart.flying) {
+        dart.x += dart.vx;
+        dart.y += dart.vy;
+        dart.vx *= 0.98;
+        dart.vy *= 0.98;
+
+        if (Math.abs(dart.vx) < 0.1 && Math.abs(dart.vy) < 0.1) {
+          dart.flying = false;
+          checkHit();
+          setTimeout(resetDart, 1000);
+        }
+      }
+    }
+
+    function checkHit() {
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      const dx = dart.x - cx;
+      const dy = dart.y - cy;
+      const dist = Math.hypot(dx, dy);
+
+      if (dist < 50) score += 100;
+      else if (dist < 100) score += 50;
+      else if (dist < 150) score += 25;
+      else if (dist < 200) score += 10;
+
+      scoreDisplay.textContent = "Score: " + score;
+    }
+
+    function loop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBoard();
+      drawDart();
+      update();
+      requestAnimationFrame(loop);
+    }
+
+    canvas.addEventListener("mousedown", e => {
+      if (dart.flying) return;
+      isAiming = true;
+      aimStart = { x: e.offsetX, y: e.offsetY };
+    });
+
+    canvas.addEventListener("mouseup", e => {
+      if (!isAiming) return;
+      isAiming = false;
+      const dx = aimStart.x - e.offsetX;
+      const dy = aimStart.y - e.offsetY;
+      shootDart(dx, dy);
+    });
+
+    resetDart();
+    loop();
+  </script>
+</body>
+</html>
