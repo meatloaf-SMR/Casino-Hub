@@ -175,7 +175,6 @@
         : "Turn: Player";
     }
 
-    // ✅ FIXED MOUSE SCALING
     function getMousePos(e) {
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
@@ -186,7 +185,6 @@
       };
     }
 
-    // ✅ Pull‑back aiming
     canvas.addEventListener("mousedown", (e) => {
       if (vsAI && currentTurn !== "player") return;
 
@@ -216,7 +214,6 @@
 
       const angle = Math.atan2(dy, dx);
 
-      // ✅ Pull‑back distance = power
       const pullBack = Math.hypot(dx, dy);
       const maxPull = 150;
       const power = Math.min(pullBack, maxPull) / 10;
@@ -288,6 +285,7 @@
       return pockets.some(p => Math.hypot(ball.x - p.x, ball.y - p.y) < POCKET_RADIUS);
     }
 
+    /* ✅ REALISTIC ENERGY‑CONSERVING COLLISION */
     function resolveCollision(b1, b2) {
       if (b1.sunk || b2.sunk) return;
 
@@ -306,20 +304,18 @@
       b2.x += nx * overlap / 2;
       b2.y += ny * overlap / 2;
 
-      const dvx = b2.vx - b1.vx;
-      const dvy = b2.vy - b1.vy;
-      const relVel = dvx * nx + dvy * ny;
+      const p = b1.vx * nx + b1.vy * ny;
+      const q = b2.vx * nx + b2.vy * ny;
 
-      if (relVel > 0) return;
+      const temp = p;
+      const newP = q;
+      const newQ = temp;
 
-      const impulse = -relVel;
-      const ix = impulse * nx;
-      const iy = impulse * ny;
+      b1.vx += (newP - p) * nx;
+      b1.vy += (newP - p) * ny;
 
-      b1.vx -= ix / 2;
-      b1.vy -= iy / 2;
-      b2.vx += ix / 2;
-      b2.vy += iy / 2;
+      b2.vx += (newQ - q) * nx;
+      b2.vy += (newQ - q) * ny;
     }
 
     function drawTable() {
