@@ -92,8 +92,8 @@
     const height = canvas.height;
 
     const BALL_RADIUS = 10;
-    const FRICTION = 0.992;     // smoother roll
-    const MIN_SPEED = 0.02;     // more natural slow-down
+    const FRICTION = 0.992;
+    const MIN_SPEED = 0.02;
 
     let balls = [];
     let cueBall;
@@ -111,7 +111,7 @@
     let currentTurn = "player";
     let waitingForAIShot = false;
 
-    const POCKET_RADIUS = 26;  // larger, more realistic pockets
+    const POCKET_RADIUS = 26;
     const pockets = [
       { x: 5, y: 5 },
       { x: width / 2, y: 5 },
@@ -136,7 +136,7 @@
 
       for (let row = 0; row < rows; row++) {
         for (let i = 0; i <= row; i++) {
-          const x = startX + row * (BALL_RADIUS * 2 + 3); // more spacing
+          const x = startX + row * (BALL_RADIUS * 2 + 3);
           const y = startY - row * BALL_RADIUS + i * BALL_RADIUS * 2;
           const color = ballColor(number);
           balls.push(createBall(x, y, 0, 0, color, false, number));
@@ -216,7 +216,7 @@
 
       const pullBack = Math.hypot(dx, dy);
       const maxPull = 150;
-      const power = Math.min(pullBack, maxPull) / 8; // stronger cue
+      const power = Math.min(pullBack, maxPull) / 8;
 
       cueBall.vx = -Math.cos(angle) * power;
       cueBall.vy = -Math.sin(angle) * power;
@@ -229,7 +229,10 @@
     });
 
     function allBallsStopped() {
-      return balls.every(b => Math.hypot(b.vx, b.vy) < MIN_SPEED);
+      return balls.every(b =>
+        Math.abs(b.vx) < 0.01 &&
+        Math.abs(b.vy) < 0.01
+      );
     }
 
     function physicsStep() {
@@ -240,10 +243,8 @@
         b.vx *= FRICTION;
         b.vy *= FRICTION;
 
-        if (Math.hypot(b.vx, b.vy) < MIN_SPEED) {
-          b.vx = 0;
-          b.vy = 0;
-        }
+        if (Math.abs(b.vx) < 0.01) b.vx = 0;
+        if (Math.abs(b.vy) < 0.01) b.vy = 0;
 
         if (b.x - BALL_RADIUS < 0) { b.x = BALL_RADIUS; b.vx *= -0.9; }
         if (b.x + BALL_RADIUS > width) { b.x = width - BALL_RADIUS; b.vx *= -0.9; }
@@ -287,7 +288,6 @@
       );
     }
 
-    /* ✅ REALISTIC ENERGY‑CONSERVING COLLISION */
     function resolveCollision(b1, b2) {
       if (b1.sunk || b2.sunk) return;
 
@@ -309,9 +309,8 @@
       const p = b1.vx * nx + b1.vy * ny;
       const q = b2.vx * nx + b2.vy * ny;
 
-      const temp = p;
       const newP = q;
-      const newQ = temp;
+      const newQ = p;
 
       b1.vx += (newP - p) * nx;
       b1.vy += (newP - p) * ny;
