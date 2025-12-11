@@ -92,8 +92,8 @@
     const height = canvas.height;
 
     const BALL_RADIUS = 10;
-    const FRICTION = 0.99;
-    const MIN_SPEED = 0.05;
+    const FRICTION = 0.992;     // smoother roll
+    const MIN_SPEED = 0.02;     // more natural slow-down
 
     let balls = [];
     let cueBall;
@@ -111,14 +111,14 @@
     let currentTurn = "player";
     let waitingForAIShot = false;
 
-    const POCKET_RADIUS = 18;
+    const POCKET_RADIUS = 26;  // larger, more realistic pockets
     const pockets = [
-      { x: 0, y: 0 },
-      { x: width / 2, y: 0 },
-      { x: width, y: 0 },
-      { x: 0, y: height },
-      { x: width / 2, y: height },
-      { x: width, y: height }
+      { x: 5, y: 5 },
+      { x: width / 2, y: 5 },
+      { x: width - 5, y: 5 },
+      { x: 5, y: height - 5 },
+      { x: width / 2, y: height - 5 },
+      { x: width - 5, y: height - 5 }
     ];
 
     function resetTable() {
@@ -136,7 +136,7 @@
 
       for (let row = 0; row < rows; row++) {
         for (let i = 0; i <= row; i++) {
-          const x = startX + row * (BALL_RADIUS * 2 + 1);
+          const x = startX + row * (BALL_RADIUS * 2 + 3); // more spacing
           const y = startY - row * BALL_RADIUS + i * BALL_RADIUS * 2;
           const color = ballColor(number);
           balls.push(createBall(x, y, 0, 0, color, false, number));
@@ -216,7 +216,7 @@
 
       const pullBack = Math.hypot(dx, dy);
       const maxPull = 150;
-      const power = Math.min(pullBack, maxPull) / 10;
+      const power = Math.min(pullBack, maxPull) / 8; // stronger cue
 
       cueBall.vx = -Math.cos(angle) * power;
       cueBall.vy = -Math.sin(angle) * power;
@@ -245,10 +245,10 @@
           b.vy = 0;
         }
 
-        if (b.x - BALL_RADIUS < 0) { b.x = BALL_RADIUS; b.vx *= -1; }
-        if (b.x + BALL_RADIUS > width) { b.x = width - BALL_RADIUS; b.vx *= -1; }
-        if (b.y - BALL_RADIUS < 0) { b.y = BALL_RADIUS; b.vy *= -1; }
-        if (b.y + BALL_RADIUS > height) { b.y = height - BALL_RADIUS; b.vy *= -1; }
+        if (b.x - BALL_RADIUS < 0) { b.x = BALL_RADIUS; b.vx *= -0.9; }
+        if (b.x + BALL_RADIUS > width) { b.x = width - BALL_RADIUS; b.vx *= -0.9; }
+        if (b.y - BALL_RADIUS < 0) { b.y = BALL_RADIUS; b.vy *= -0.9; }
+        if (b.y + BALL_RADIUS > height) { b.y = height - BALL_RADIUS; b.vy *= -0.9; }
       });
 
       for (let i = 0; i < balls.length; i++) {
@@ -282,7 +282,9 @@
     }
 
     function isInPocket(ball) {
-      return pockets.some(p => Math.hypot(ball.x - p.x, ball.y - p.y) < POCKET_RADIUS);
+      return pockets.some(p =>
+        Math.hypot(ball.x - p.x, ball.y - p.y) < POCKET_RADIUS + BALL_RADIUS
+      );
     }
 
     /* ✅ REALISTIC ENERGY‑CONSERVING COLLISION */
