@@ -19,6 +19,62 @@
     min-height: 100vh;
   }
 
+  /* ✅ Password Gate (Option A – white minimal box) */
+  #passwordOverlay {
+    position: fixed;
+    inset: 0;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    color: #111;
+    text-align: center;
+  }
+
+  #passwordBox {
+    background: #f5f5f5;
+    padding: 20px 26px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    width: 260px;
+  }
+
+  #passwordBox h2 {
+    font-size: 22px;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+
+  #passwordInput {
+    width: 100%;
+    padding: 8px;
+    margin-top: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+  }
+
+  #passwordBtn {
+    width: 100%;
+    margin-top: 12px;
+    padding: 10px;
+    background: #111;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  #passwordError {
+    margin-top: 8px;
+    color: #b00020;
+    font-size: 14px;
+    min-height: 18px;
+  }
+
   /* ✅ Slide‑In Update Bar */
   #updateBar {
     width: 100%;
@@ -31,7 +87,7 @@
     position: sticky;
     top: 0;
     z-index: 9998;
-    display: none; /* hidden until startup gate closes */
+    display: none;
     align-items: center;
     gap: 15px;
 
@@ -136,7 +192,7 @@
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.92);
-    display: flex;
+    display: none; /* hidden until password is correct */
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -202,7 +258,6 @@
     background: #fefefe;
   }
 
-  /* ✅ Square Calculator Buttons */
   .calcGrid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -215,7 +270,7 @@
     font-size: 20px;
     border: none;
     background: #e0e0e0;
-    border-radius: 0; /* square */
+    border-radius: 0;
     cursor: pointer;
     transition: background 0.2s;
   }
@@ -235,6 +290,16 @@
 
 </head>
 <body>
+
+<!-- ✅ PASSWORD GATE -->
+<div id="passwordOverlay">
+  <div id="passwordBox">
+    <h2>Enter Access Code</h2>
+    <input id="passwordInput" type="password" placeholder="Code">
+    <button id="passwordBtn">Unlock</button>
+    <div id="passwordError"></div>
+  </div>
+</div>
 
 <!-- ✅ Update Bar -->
 <div id="updateBar">
@@ -274,7 +339,7 @@
 </div>
 
 <!-- ✅ Casino Content -->
-<div id="casinoContent">
+<div id="casinoContent" style="display:none;">
 
   <!-- ✅ Startup Gate -->
   <div id="startupOverlay">
@@ -354,6 +419,27 @@
 </div>
 
 <script>
+/* ✅ Password Logic */
+const PASSWORD = "smr";
+
+document.getElementById("passwordBtn").addEventListener("click", checkPassword);
+document.getElementById("passwordInput").addEventListener("keydown", e => {
+  if (e.key === "Enter") checkPassword();
+});
+
+function checkPassword() {
+  const input = document.getElementById("passwordInput").value.trim().toLowerCase();
+  const error = document.getElementById("passwordError");
+
+  if (input === PASSWORD) {
+    document.getElementById("passwordOverlay").style.display = "none";
+    document.getElementById("startupOverlay").style.display = "flex";
+    document.getElementById("casinoContent").style.display = "block";
+  } else {
+    error.textContent = "Incorrect code.";
+  }
+}
+
 /* ✅ Load update text */
 fetch("./updates.txt")
   .then(r => r.text())
