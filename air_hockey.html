@@ -73,24 +73,22 @@
     const aiScoreEl = document.getElementById("aiScore");
     const statusEl = document.getElementById("status");
 
-    // Table / physics constants
+    // Constants (simplified, arcade-style)
     const PUCK_RADIUS = 12;
     const PADDLE_RADIUS = 26;
-    const FRICTION = 0.995;    // very low, for that air hockey glide
-    const BOUNCE_DAMPING = 0.99;
-    const MAX_PUCK_SPEED = 18;
+    const FRICTION = 0.99;          // stronger friction = less runaway sliding
+    const MAX_PUCK_SPEED = 14;
     const GOAL_WIDTH = 120;
     const WIN_SCORE = 7;
 
-    // Player & AI
+    const WALL_MARGIN = 10;
+
     let player = {
       x: W * 0.25,
       y: H / 2,
       radius: PADDLE_RADIUS,
       vx: 0,
-      vy: 0,
-      lastX: null,
-      lastY: null
+      vy: 0
     };
 
     let ai = {
@@ -113,11 +111,15 @@
 
     let mousePos = { x: player.x, y: player.y };
 
+    function clamp(val, min, max) {
+      return Math.max(min, Math.min(max, val));
+    }
+
     function resetRound(scoredBy) {
       puck.x = W / 2;
       puck.y = H / 2;
-      puck.vx = (Math.random() < 0.5 ? 1 : -1) * 6;
-      puck.vy = (Math.random() - 0.5) * 6;
+      puck.vx = (Math.random() < 0.5 ? 1 : -1) * 5;
+      puck.vy = (Math.random() - 0.5) * 4;
 
       player.x = W * 0.25;
       player.y = H / 2;
@@ -151,10 +153,6 @@
       aiScoreEl.textContent = "AI: " + aiScore;
     }
 
-    function clamp(val, min, max) {
-      return Math.max(min, Math.min(max, val));
-    }
-
     function getMousePos(e) {
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
@@ -171,84 +169,40 @@
       mousePos.y = m.y;
     });
 
-    function updatePlayerPaddle() {
-      const targetX = clamp(mousePos.x, PADDLE_RADIUS + 10, W / 2 - PADDLE_RADIUS - 10);
-      const targetY = clamp(mousePos.y, PADDLE_RADIUS + 10, H - PADDLE_RADIUS - 10);
+    function updatePlayer() {
+      // Target is mouse, but constrained to left half
+      const targetX = clamp(mousePos.x, WALL_MARGIN + PADDLE_RADIUS, W / 2 - PADDLE_RADIUS - 10);
+      const targetY = clamp(mousePos.y, WALL_MARGIN + PADDLE_RADIUS, H - WALL_MARGIN - PADDLE_RADIUS);
 
-      const speedLimit = 16;
       const dx = targetX - player.x;
       const dy = targetY - player.y;
-      const dist = Math.hypot(dx, dy);
-      const maxStep = speedLimit;
+      const maxStep = 14; // limit speed to avoid insane paddle hits
 
+      const dist = Math.hypot(dx, dy);
       if (dist > maxStep) {
         const ratio = maxStep / dist;
-        player.x += dx * ratio;
-        player.y += dy * ratio;
+        player.vx = dx * ratio;
+        player.vy = dy * ratio;
+        player.x += player.vx;
+        player.y += player.vy;
       } else {
+        player.vx = dx;
+        player.vy = dy;
         player.x = targetX;
         player.y = targetY;
       }
-
-      if (player.lastX == null) {
-        player.lastX = player.x;
-        player.lastY = player.y;
-      }
-
-      player.vx = player.x - player.lastX;
-      player.vy = player.y - player.lastY;
-
-      player.lastX = player.x;
-      player.lastY = player.y;
     }
 
-    function predictPuckYAtX(targetX) {
-      let simX = puck.x;
-      let simY = puck.y;
-      let simVx = puck.vx;
-      let simVy = puck.vy;
+    function updateAI() {
+      // Simple arcade AI: moves toward puck when on its side
+      const aiMaxSpeed = 8;
 
-      for (let i = 0; i < 200; i++) {
-        simX += simVx;
-        simY += simVy;
-
-        if (simY - PUCK_RADIUS < 10) {
-          simY = 10 + PUCK_RADIUS;
-          simVy *= -1;
-        }
-        if (simY + PUCK_RADIUS > H - 10) {
-          simY = H - 10 - PUCK_RADIUS;
-          simVy *= -1;
-        }
-
-        if (simX - PUCK_RADIUS < 10 || simX + PUCK_RADIUS > W - 10) {
-          break;
-        }
-
-        if ((simVx > 0 && simX >= targetX && puck.vx > 0) ||
-            (simVx < 0 && simX <= targetX && puck.vx < 0)) {
-          return simY;
-        }
-      }
-      return simY;
-    }
-
-    function updateAIPaddle() {
-      const reactionZone = W * 0.4;
-      const aiMaxSpeed = 10;
-
+      let targetX = W * 0.75;
       let targetY = H / 2;
 
-      if (puck.x > reactionZone && puck.vx > 0) {
-        const predictedY = predictPuckYAtX(W * 0.72);
-        targetY = clamp(predictedY, PADDLE_RADIUS + 10, H - PADDLE_RADIUS - 10);
-      }
-
-      let targetX;
-      if (puck.vx > 0 && puck.x > W / 2) {
-        targetX = W * 0.78;
-      } else {
-        targetX = W * 0.72;
+      if (puck.x > W / 2) {
+        targetX = clamp(puck.x + 40, W / 2 + PADDLE_RADIUS + 5, W - WALL_MARGIN - PADDLE_RADIUS);
+        targetY = clamp(puck.y, WALL_MARGIN + PADDLE_RADIUS, H - WALL_MARGIN - PADDLE_RADIUS);
       }
 
       const dx = targetX - ai.x;
@@ -257,28 +211,17 @@
 
       if (dist > 0) {
         const step = Math.min(aiMaxSpeed, dist);
-        ai.x += (dx / dist) * step;
-        ai.y += (dy / dist) * step;
+        ai.vx = (dx / dist) * step;
+        ai.vy = (dy / dist) * step;
+        ai.x += ai.vx;
+        ai.y += ai.vy;
+      } else {
+        ai.vx = 0;
+        ai.vy = 0;
       }
 
-      ai.x = clamp(ai.x, W / 2 + PADDLE_RADIUS + 5, W - PADDLE_RADIUS - 10);
-      ai.y = clamp(ai.y, PADDLE_RADIUS + 10, H - PADDLE_RADIUS - 10);
-    }
-
-    function reflectPuck(normalX, normalY, addBoost = 0) {
-      const speedBefore = Math.hypot(puck.vx, puck.vy) || 1;
-
-      const dot = puck.vx * normalX + puck.vy * normalY;
-      puck.vx = puck.vx - 2 * dot * normalX;
-      puck.vy = puck.vy - 2 * dot * normalY;
-
-      let speedAfter = Math.hypot(puck.vx, puck.vy) + addBoost;
-      const scale = Math.min(MAX_PUCK_SPEED, speedAfter) / (speedAfter || 1);
-      puck.vx *= scale;
-      puck.vy *= scale;
-
-      puck.vx *= BOUNCE_DAMPING;
-      puck.vy *= BOUNCE_DAMPING;
+      ai.x = clamp(ai.x, W / 2 + PADDLE_RADIUS + 5, W - WALL_MARGIN - PADDLE_RADIUS);
+      ai.y = clamp(ai.y, WALL_MARGIN + PADDLE_RADIUS, H - WALL_MARGIN - PADDLE_RADIUS);
     }
 
     function handlePaddleCollision(paddle) {
@@ -288,6 +231,7 @@
       const minDist = PUCK_RADIUS + paddle.radius;
 
       if (dist < minDist && dist > 0) {
+        // Push puck out just enough to avoid overlap
         const overlap = minDist - dist;
         const nx = dx / dist;
         const ny = dy / dist;
@@ -295,41 +239,60 @@
         puck.x += nx * overlap;
         puck.y += ny * overlap;
 
-        puck.vx += paddle.vx * 0.6;
-        puck.vy += paddle.vy * 0.6;
+        // Simple arcade impulse: puck goes away from paddle + some of paddle velocity
+        const hitStrength = 0.5;
+        puck.vx = nx * 8 + paddle.vx * hitStrength;
+        puck.vy = ny * 8 + paddle.vy * hitStrength;
 
-        reflectPuck(nx, ny, 2.5);
+        // Clamp speed
+        const speed = Math.hypot(puck.vx, puck.vy);
+        if (speed > MAX_PUCK_SPEED) {
+          const k = MAX_PUCK_SPEED / speed;
+          puck.vx *= k;
+          puck.vy *= k;
+        }
       }
     }
 
-    function physicsStep() {
+    function updatePuck() {
+      // Move
       puck.x += puck.vx;
       puck.y += puck.vy;
 
+      // Friction
       puck.vx *= FRICTION;
       puck.vy *= FRICTION;
 
+      // Stop tiny drift
+      if (Math.abs(puck.vx) < 0.05) puck.vx = 0;
+      if (Math.abs(puck.vy) < 0.05) puck.vy = 0;
+
+      // Clamp speed
       const speed = Math.hypot(puck.vx, puck.vy);
       if (speed > MAX_PUCK_SPEED) {
-        const scale = MAX_PUCK_SPEED / speed;
-        puck.vx *= scale;
-        puck.vy *= scale;
+        const k = MAX_PUCK_SPEED / speed;
+        puck.vx *= k;
+        puck.vy *= k;
       }
 
-      if (puck.y - PUCK_RADIUS < 10) {
-        puck.y = 10 + PUCK_RADIUS;
-        reflectPuck(0, 1);
+      // Top/bottom walls
+      if (puck.y - PUCK_RADIUS < WALL_MARGIN) {
+        puck.y = WALL_MARGIN + PUCK_RADIUS;
+        puck.vy = -puck.vy;
       }
-      if (puck.y + PUCK_RADIUS > H - 10) {
-        puck.y = H - 10 - PUCK_RADIUS;
-        reflectPuck(0, -1);
+      if (puck.y + PUCK_RADIUS > H - WALL_MARGIN) {
+        puck.y = H - WALL_MARGIN - PUCK_RADIUS;
+        puck.vy = -puck.vy;
       }
 
-      const leftGoalX = 10;
-      const rightGoalX = W - 10;
+      // Goals & side walls
+      const leftGoalX = WALL_MARGIN;
+      const rightGoalX = W - WALL_MARGIN;
 
+      // Left side
       if (puck.x - PUCK_RADIUS < leftGoalX) {
         if (puck.y > H / 2 - GOAL_WIDTH / 2 && puck.y < H / 2 + GOAL_WIDTH / 2) {
+          // AI scores
           aiScore++;
           updateScoreDisplay();
           if (aiScore >= WIN_SCORE) {
@@ -341,12 +304,14 @@
           return;
         } else {
           puck.x = leftGoalX + PUCK_RADIUS;
-          reflectPuck(1, 0);
+          puck.vx = -puck.vx;
         }
       }
 
+      // Right side
       if (puck.x + PUCK_RADIUS > rightGoalX) {
         if (puck.y > H / 2 - GOAL_WIDTH / 2 && puck.y < H / 2 + GOAL_WIDTH / 2) {
+          // Player scores
           playerScore++;
           updateScoreDisplay();
           if (playerScore >= WIN_SCORE) {
@@ -358,10 +323,11 @@
           return;
         } else {
           puck.x = rightGoalX - PUCK_RADIUS;
-          reflectPuck(-1, 0);
+          puck.vx = -puck.vx;
         }
       }
 
+      // Paddle collisions (after movement, once per frame)
       handlePaddleCollision(player);
       handlePaddleCollision(ai);
     }
@@ -370,28 +336,32 @@
       ctx.fillStyle = "#084057";
       ctx.fillRect(0, 0, W, H);
 
+      // Outer border
       ctx.strokeStyle = "#0da4d6";
       ctx.lineWidth = 4;
-      ctx.strokeRect(10, 10, W - 20, H - 20);
+      ctx.strokeRect(WALL_MARGIN, WALL_MARGIN, W - 2 * WALL_MARGIN, H - 2 * WALL_MARGIN);
 
+      // Center line
       ctx.beginPath();
-      ctx.moveTo(W / 2, 10);
-      ctx.lineTo(W / 2, H - 10);
+      ctx.moveTo(W / 2, WALL_MARGIN);
+      ctx.lineTo(W / 2, H - WALL_MARGIN);
       ctx.strokeStyle = "rgba(255,255,255,0.3)";
       ctx.lineWidth = 2;
       ctx.setLineDash([10, 8]);
       ctx.stroke();
       ctx.setLineDash([]);
 
+      // Center circle
       ctx.beginPath();
       ctx.arc(W / 2, H / 2, 50, 0, Math.PI * 2);
       ctx.strokeStyle = "rgba(255,255,255,0.25)";
       ctx.lineWidth = 2;
       ctx.stroke();
 
+      // Goals
       ctx.fillStyle = "#111";
-      ctx.fillRect(10 - 2, H / 2 - GOAL_WIDTH / 2, 8, GOAL_WIDTH);
-      ctx.fillRect(W - 10 - 6, H / 2 - GOAL_WIDTH / 2, 8, GOAL_WIDTH);
+      ctx.fillRect(WALL_MARGIN - 2, H / 2 - GOAL_WIDTH / 2, 8, GOAL_WIDTH);
+      ctx.fillRect(W - WALL_MARGIN - 6, H / 2 - GOAL_WIDTH / 2, 8, GOAL_WIDTH);
     }
 
     function drawPaddle(p, color) {
@@ -427,9 +397,9 @@
     }
 
     function loop() {
-      updatePlayerPaddle();
-      updateAIPaddle();
-      physicsStep();
+      updatePlayer();
+      updateAI();
+      updatePuck();
 
       ctx.clearRect(0, 0, W, H);
       drawTable();
