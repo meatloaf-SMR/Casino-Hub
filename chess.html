@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Chess</title>
+<style>
+  body {
+    background: radial-gradient(circle at top, #0b1924, #02070b 70%);
+    color: #f4f4f4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    font-family: system-ui, sans-serif;
+  }
+
+  h1 {
+    margin-bottom: 10px;
+  }
+
+  #status {
+    margin-bottom: 15px;
+    font-size: 18px;
+    opacity: 0.9;
+  }
+
+  #board {
+    width: 480px;
+    height: 480px;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    border: 8px solid #111;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+  }
+
+  .square {
+    width: 60px;
+    height: 60px;
+    font-size: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: grab;
+    user-select: none;
+  }
+
+  .light { background: #e0c38c; }
+  .dark  { background: #8a613a; }
+
+  .highlight {
+    outline: 3px solid #ffd34f;
+  }
+</style>
+</head>
+<body>
+
+<h1>Chess</h1>
+<div id="status">White to move</div>
+<div id="board"></div>
+
+<script>
+const boardEl = document.getElementById("board");
+const statusEl = document.getElementById("status");
+
+let board = [
+  ["r","n","b","q","k","b","n","r"],
+  ["p","p","p","p","p","p","p","p"],
+  ["","","","","","","",""],
+  ["","","","","","","",""],
+  ["","","","","","","",""],
+  ["","","","","","","",""],
+  ["P","P","P","P","P","P","P","P"],
+  ["R","N","B","Q","K","B","N","R"]
+];
+
+let turn = "white";
+let selected = null;
+
+function isWhite(piece){ return piece && piece === piece.toUpperCase(); }
+function isBlack(piece){ return piece && piece === piece.toLowerCase(); }
+
+function inBounds(r,c){ return r>=0 && r<8 && c>=0 && c<8; }
+
+function renderBoard(){
+  boardEl.innerHTML = "";
+  for(let r=0;r<8;r++){
+    for(let c=0;c<8;c++){
+      const sq = document.createElement("div");
+      sq.className = "square " + ((r+c)%2===0 ? "light" : "dark");
+      sq.dataset.r = r;
+      sq.dataset.c = c;
+      sq.textContent = pieceToChar(board[r][c]);
+      sq.addEventListener("click", () => onSquareClick(r,c));
+      boardEl.appendChild(sq);
+    }
+  }
+}
+
+function pieceToChar(p){
+  const map = {
+    "r":"♜","n":"♞","b":"♝","q":"♛","k":"♚","p":"♟",
+    "R":"♖","N":"♘","B":"♗","Q":"♕","K":"♔","P":"♙"
+  };
+  return map[p] || "";
+}
+
+function onSquareClick(r,c){
+  const piece = board[r][c];
+
+  if(selected){
+    const [sr,sc] = selected;
+    if(isLegalMove(sr,sc,r,c)){
+      board[r][c] = board[sr][sc];
+      board[sr][sc] = "";
+      turn = (turn==="white"?"black":"white");
+      statusEl.textContent = turn.charAt(0).toUpperCase()+turn.slice(1)+" to move";
+    }
+    selected = null;
+    renderBoard();
+    return;
+  }
+
+  if(piece && ((turn==="white" && isWhite(piece)) || (turn==="black" && isBlack(piece)))){
+    selected = [r,c];
+    highlight(r,c);
+  }
+}
+
+function highlight(r,c){
+  renderBoard();
+  const idx = r*8+c;
+  boardEl.children[idx].classList.add("highlight");
+}
+
+function isLegalMove(sr,sc,r,c){
+  const piece = board[sr][sc];
+  if(!piece) return false;
+
+  const target = board[r][c];
+  if(isWhite(piece) && isWhite(target)) return false;
+  if(isBlack(piece) && isBlack(target)) return false;
+
+  const dr = r - sr;
+  const dc = c - sc;
+
+  const absR = Math.abs(dr);
+  const absC = Math.abs(dc);
+
+  const lower = piece.toLowerCase();
+
+  if(lower==="p"){
+    const dir = isWhite(piece) ? -1 : 1;
+    const startRow = isWhite(piece) ? 6 : 1;
+
+    if(dc===0 && target==="" && dr===dir) return true;
+    if(dc===0 && target==="" && sr===startRow && dr===2*dir && board[sr+dir][sc]==="") return true;
+    if(absC===1 && dr===dir && target!=="") return true;
+    return false;
+  }
+
+  if(lower==="r"){
+    if(sr===r || sc===c) return clearPath(sr,sc,r,c);
+    return false;
+  }
+
+  if(lower==="n"){
+    return (absR===2 && absC===1) || (absR===1 && absC===2);
+  }
+
+  if(lower==="b"){
+    if(absR===absC) return clearPath(sr,sc,r,c);
+    return false;
+  }
+
+  if(lower==="q"){
+    if(sr===r || sc===c || absR===absC) return clearPath(sr,sc,r,c);
+    return false;
+  }
+
+  if(lower==="k"){
+    return absR<=1 && absC<=1;
+  }
+
+  return false;
+}
+
+function clearPath(sr,sc,r,c){
+  const stepR = Math.sign(r-sr);
+  const stepC = Math.sign(c-sc);
+  let cr = sr+stepR;
+  let cc = sc+stepC;
+  while(cr!==r || cc!==c){
+    if(board[cr][cc] !== "") return false;
+    cr += stepR;
+    cc += stepC;
+  }
+  return true;
+}
+
+renderBoard();
+</script>
+
+</body>
+</html>
