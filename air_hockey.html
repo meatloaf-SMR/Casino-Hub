@@ -73,30 +73,29 @@
     const aiScoreEl = document.getElementById("aiScore");
     const statusEl = document.getElementById("status");
 
-    // Constants (simplified, arcade-style)
+    // Constants
     const PUCK_RADIUS = 12;
     const PADDLE_RADIUS = 26;
-    const FRICTION = 0.99;          // stronger friction = less runaway sliding
+    const FRICTION = 0.99;
     const MAX_PUCK_SPEED = 14;
     const GOAL_WIDTH = 120;
     const WIN_SCORE = 7;
-
     const WALL_MARGIN = 10;
 
     let player = {
       x: W * 0.25,
       y: H / 2,
-      radius: PADDLE_RADIUS,
       vx: 0,
-      vy: 0
+      vy: 0,
+      radius: PADDLE_RADIUS
     };
 
     let ai = {
       x: W * 0.75,
       y: H / 2,
-      radius: PADDLE_RADIUS,
       vx: 0,
-      vy: 0
+      vy: 0,
+      radius: PADDLE_RADIUS
     };
 
     let puck = {
@@ -111,8 +110,8 @@
 
     let mousePos = { x: player.x, y: player.y };
 
-    function clamp(val, min, max) {
-      return Math.max(min, Math.min(max, val));
+    function clamp(v, min, max) {
+      return Math.max(min, Math.min(max, v));
     }
 
     function resetRound(scoredBy) {
@@ -123,21 +122,12 @@
 
       player.x = W * 0.25;
       player.y = H / 2;
-      player.vx = 0;
-      player.vy = 0;
-
       ai.x = W * 0.75;
       ai.y = H / 2;
-      ai.vx = 0;
-      ai.vy = 0;
 
-      if (scoredBy === "player") {
-        statusEl.textContent = "You scored! New round.";
-      } else if (scoredBy === "ai") {
-        statusEl.textContent = "AI scored. New round.";
-      } else {
-        statusEl.textContent = "Ready!";
-      }
+      if (scoredBy === "player") statusEl.textContent = "You scored! New round.";
+      else if (scoredBy === "ai") statusEl.textContent = "AI scored. New round.";
+      else statusEl.textContent = "Ready!";
     }
 
     function resetGame() {
@@ -163,26 +153,23 @@
       };
     }
 
-    canvas.addEventListener("mousemove", (e) => {
-      const m = getMousePos(e);
-      mousePos.x = m.x;
-      mousePos.y = m.y;
+    canvas.addEventListener("mousemove", e => {
+      mousePos = getMousePos(e);
     });
 
     function updatePlayer() {
-      // Target is mouse, but constrained to left half
       const targetX = clamp(mousePos.x, WALL_MARGIN + PADDLE_RADIUS, W / 2 - PADDLE_RADIUS - 10);
       const targetY = clamp(mousePos.y, WALL_MARGIN + PADDLE_RADIUS, H - WALL_MARGIN - PADDLE_RADIUS);
 
       const dx = targetX - player.x;
       const dy = targetY - player.y;
-      const maxStep = 15; // limit speed to avoid insane paddle hits
+      const maxStep = 14;
 
       const dist = Math.hypot(dx, dy);
       if (dist > maxStep) {
-        const ratio = maxStep / dist;
-        player.vx = dx * ratio;
-        player.vy = dy * ratio;
+        const r = maxStep / dist;
+        player.vx = dx * r;
+        player.vy = dy * r;
         player.x += player.vx;
         player.y += player.vy;
       } else {
@@ -193,58 +180,53 @@
       }
     }
 
+    // ✅ Strategic AI
     function updateAI() {
-      // Simple arcade AI: moves toward puck when on its side
-      const aiMaxSpeed = 6;
+      const aiMaxSpeed = 7;
+      const reactionDelay = 6;
+      const dangerLine = W * 0.62;
 
       let targetX = W * 0.75;
       let targetY = H / 2;
 
-      if (puck.x > W / 2) {
-        targetX = clamp(puck.x + 40, W / 2 + PADDLE_RADIUS + 5, W - WALL_MARGIN - PADDLE_RADIUS);
-        targetY = clamp(puck.y, WALL_MARGIN + PADDLE_RADIUS, H - WALL_MARGIN - PADDLE_RADIUS);
+      // Defensive: block incoming puck
+      if (puck.vx > 0 && puck.x > dangerLine) {
+        const t = (ai.x - puck.x) / puck.vx;
+        let predictedY = puck.y + puck.vy * t;
+        predictedY = clamp(predictedY, PADDLE_RADIUS + 10, H - PADDLE_RADIUS - 10);
+        targetY = predictedY;
       }
 
-      const dx = targetX - ai.x;
-      const dy = targetY - ai.y;
-      const dist = Math.hypot(dx, dy);
-
-      if (dist > 0) {
-        const step = Math.min(aiMaxSpeed, dist);
-        ai.vx = (dx / dist) * step;
-        ai.vy = (dy / dist) * step;
-        ai.x += ai.vx;
-        ai.y += ai.vy;
-      } else {
-        ai.vx = 0;
-        ai.vy = 0;
+      // Offensive: attack puck on AI side
+      if (puck.x > W * 0.55) {
+        targetX = clamp(puck.x - 40, W / 2 + PADDLE_RADIUS + 5, W - PADDLE_RADIUS - 10);
+        targetY = clamp(puck.y, PADDLE_RADIUS + 10, H - PADDLE_RADIUS - 10);
       }
 
-      ai.x = clamp(ai.x, W / 2 + PADDLE_RADIUS + 5, W - WALL_MARGIN - PADDLE_RADIUS);
-      ai.y = clamp(ai.y, WALL_MARGIN + PADDLE_RADIUS, H - WALL_MARGIN - PADDLE_RADIUS);
+      ai.x += (targetX - ai.x) / reactionDelay;
+      ai.y += (targetY - ai.y) / reactionDelay;
+
+      ai.x = clamp(ai.x, W / 2 + PADDLE_RADIUS + 5, W - PADDLE_RADIUS - 10);
+      ai.y = clamp(ai.y, PADDLE_RADIUS + 10, H - PADDLE_RADIUS - 10);
     }
 
-    function handlePaddleCollision(paddle) {
-      const dx = puck.x - paddle.x;
-      const dy = puck.y - paddle.y;
+    function handlePaddleCollision(p) {
+      const dx = puck.x - p.x;
+      const dy = puck.y - p.y;
       const dist = Math.hypot(dx, dy);
-      const minDist = PUCK_RADIUS + paddle.radius;
+      const minDist = PUCK_RADIUS + p.radius;
 
       if (dist < minDist && dist > 0) {
-        // Push puck out just enough to avoid overlap
-        const overlap = minDist - dist;
         const nx = dx / dist;
         const ny = dy / dist;
+        const overlap = minDist - dist;
 
         puck.x += nx * overlap;
         puck.y += ny * overlap;
 
-        // Simple arcade impulse: puck goes away from paddle + some of paddle velocity
-        const hitStrength = 0.5;
-        puck.vx = nx * 8 + paddle.vx * hitStrength;
-        puck.vy = ny * 8 + paddle.vy * hitStrength;
+        puck.vx = nx * 8 + p.vx * 0.5;
+        puck.vy = ny * 8 + p.vy * 0.5;
 
-        // Clamp speed
         const speed = Math.hypot(puck.vx, puck.vy);
         if (speed > MAX_PUCK_SPEED) {
           const k = MAX_PUCK_SPEED / speed;
@@ -255,19 +237,15 @@
     }
 
     function updatePuck() {
-      // Move
       puck.x += puck.vx;
       puck.y += puck.vy;
 
-      // Friction
       puck.vx *= FRICTION;
       puck.vy *= FRICTION;
 
-      // Stop tiny drift
       if (Math.abs(puck.vx) < 0.05) puck.vx = 0;
       if (Math.abs(puck.vy) < 0.05) puck.vy = 0;
 
-      // Clamp speed
       const speed = Math.hypot(puck.vx, puck.vy);
       if (speed > MAX_PUCK_SPEED) {
         const k = MAX_PUCK_SPEED / speed;
@@ -275,7 +253,6 @@
         puck.vy *= k;
       }
 
-      // Top/bottom walls
       if (puck.y - PUCK_RADIUS < WALL_MARGIN) {
         puck.y = WALL_MARGIN + PUCK_RADIUS;
         puck.vy = -puck.vy;
@@ -285,22 +262,17 @@
         puck.vy = -puck.vy;
       }
 
-      // Goals & side walls
       const leftGoalX = WALL_MARGIN;
       const rightGoalX = W - WALL_MARGIN;
 
-      // Left side
       if (puck.x - PUCK_RADIUS < leftGoalX) {
         if (puck.y > H / 2 - GOAL_WIDTH / 2 && puck.y < H / 2 + GOAL_WIDTH / 2) {
-          // AI scores
           aiScore++;
           updateScoreDisplay();
           if (aiScore >= WIN_SCORE) {
             statusEl.textContent = "AI wins! Resetting game...";
             setTimeout(resetGame, 1200);
-          } else {
-            resetRound("ai");
-          }
+          } else resetRound("ai");
           return;
         } else {
           puck.x = leftGoalX + PUCK_RADIUS;
@@ -308,18 +280,14 @@
         }
       }
 
-      // Right side
       if (puck.x + PUCK_RADIUS > rightGoalX) {
         if (puck.y > H / 2 - GOAL_WIDTH / 2 && puck.y < H / 2 + GOAL_WIDTH / 2) {
-          // Player scores
           playerScore++;
           updateScoreDisplay();
           if (playerScore >= WIN_SCORE) {
             statusEl.textContent = "You win! Resetting game...";
             setTimeout(resetGame, 1200);
-          } else {
-            resetRound("player");
-          }
+          } else resetRound("player");
           return;
         } else {
           puck.x = rightGoalX - PUCK_RADIUS;
@@ -327,7 +295,6 @@
         }
       }
 
-      // Paddle collisions (after movement, once per frame)
       handlePaddleCollision(player);
       handlePaddleCollision(ai);
     }
@@ -336,12 +303,10 @@
       ctx.fillStyle = "#084057";
       ctx.fillRect(0, 0, W, H);
 
-      // Outer border
       ctx.strokeStyle = "#0da4d6";
       ctx.lineWidth = 4;
       ctx.strokeRect(WALL_MARGIN, WALL_MARGIN, W - 2 * WALL_MARGIN, H - 2 * WALL_MARGIN);
 
-      // Center line
       ctx.beginPath();
       ctx.moveTo(W / 2, WALL_MARGIN);
       ctx.lineTo(W / 2, H - WALL_MARGIN);
@@ -351,14 +316,12 @@
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // Center circle
       ctx.beginPath();
       ctx.arc(W / 2, H / 2, 50, 0, Math.PI * 2);
       ctx.strokeStyle = "rgba(255,255,255,0.25)";
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // Goals
       ctx.fillStyle = "#111";
       ctx.fillRect(WALL_MARGIN - 2, H / 2 - GOAL_WIDTH / 2, 8, GOAL_WIDTH);
       ctx.fillRect(W - WALL_MARGIN - 6, H / 2 - GOAL_WIDTH / 2, 8, GOAL_WIDTH);
@@ -415,4 +378,3 @@
   </script>
 </body>
 </html>
-
