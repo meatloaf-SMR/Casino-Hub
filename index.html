@@ -142,6 +142,15 @@
     padding: 20px;
     text-align: center;
     box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+
+    /* ✅ Added hover animation */
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.35);
+    cursor: pointer;
   }
 
   .card h2 {
@@ -192,7 +201,7 @@
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.92);
-    display: none; /* hidden until password is correct */
+    display: none;
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -509,4 +518,3 @@ function calculate() {
 
 </body>
 </html>
-
