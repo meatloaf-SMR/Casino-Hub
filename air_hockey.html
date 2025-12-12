@@ -176,7 +176,7 @@
 
       const dx = targetX - player.x;
       const dy = targetY - player.y;
-      const maxStep = 14; // limit speed to avoid insane paddle hits
+      const maxStep = 15; // limit speed to avoid insane paddle hits
 
       const dist = Math.hypot(dx, dy);
       if (dist > maxStep) {
@@ -195,7 +195,7 @@
 
     function updateAI() {
       // Simple arcade AI: moves toward puck when on its side
-      const aiMaxSpeed = 8;
+      const aiMaxSpeed = 6;
 
       let targetX = W * 0.75;
       let targetY = H / 2;
@@ -415,3 +415,4 @@
   </script>
 </body>
 </html>
+
