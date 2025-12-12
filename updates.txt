@@ -1,1 +1,2 @@
-Welcome! To use the panic key update, press Esc! If you have new games to add or have found a bug, go to: https://github.com/meatloaf-SMR/Casino-Hub/issues
+!NEW GAME! Chess was added, and many bugs in air hockey and mini golf were fixed.
+To use the panic key update, press Esc!  If you have new games to add or have found a bug, go to: https://github.com/meatloaf-SMR/Casino-Hub/issues
