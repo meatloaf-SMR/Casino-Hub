@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Knife Throw</title>
+<title>Knife Throw Spiral</title>
 <style>
   body { background:#222; display:flex; justify-content:center; align-items:center; height:100vh; }
   canvas { background:#333; border:6px solid #fff; }
@@ -14,11 +14,9 @@
 const c=document.getElementById("game"),ctx=c.getContext("2d");
 let knives=[],targetAngle=0,score=0,gameOver=false;
 
-// Throw knife on click
 c.addEventListener("click",()=>{
   if(!gameOver){
     knives.push({angle:targetAngle});
-    // Check collision with existing knives (fail if too close)
     for(let k of knives.slice(0,-1)){
       if(Math.abs(k.angle-targetAngle)<0.15){ // too close
         gameOver=true;
@@ -26,7 +24,6 @@ c.addEventListener("click",()=>{
     }
     if(!gameOver)score++;
   } else {
-    // Restart
     knives=[];score=0;gameOver=false;
   }
 });
@@ -35,18 +32,28 @@ function update(){
   targetAngle+=0.02; // target spins
 }
 
-function draw(){
-  ctx.clearRect(0,0,400,400);
-
-  // Draw target
+function drawSpiral(){
   ctx.save();
   ctx.translate(200,200);
   ctx.rotate(targetAngle);
-  ctx.fillStyle="brown";
+  ctx.strokeStyle="brown";
+  ctx.lineWidth=3;
   ctx.beginPath();
-  ctx.arc(0,0,80,0,Math.PI*2);
-  ctx.fill();
+  for(let t=0;t<Math.PI*6;t+=0.1){
+    let r=10+t*5; // spiral radius grows
+    let x=Math.cos(t)*r;
+    let y=Math.sin(t)*r;
+    ctx.lineTo(x,y);
+  }
+  ctx.stroke();
   ctx.restore();
+}
+
+function draw(){
+  ctx.clearRect(0,0,400,400);
+
+  // Draw spiral target
+  drawSpiral();
 
   // Draw knives
   ctx.fillStyle="silver";
@@ -58,15 +65,15 @@ function draw(){
 
   // Score
   ctx.fillStyle="white";
-  ctx.font="16px sans-serif";
+  ctx.font="16px monospace";
   ctx.fillText("Score: "+score,20,20);
 
   // Game Over
   if(gameOver){
     ctx.fillStyle="yellow";
-    ctx.font="24px sans-serif";
+    ctx.font="24px monospace";
     ctx.fillText("GAME OVER",130,200);
-    ctx.font="14px sans-serif";
+    ctx.font="14px monospace";
     ctx.fillText("Click to Restart",140,230);
   }
 }
