@@ -12,22 +12,70 @@
 <canvas id="game" width="500" height="300"></canvas>
 <script>
 const c=document.getElementById("game"),ctx=c.getContext("2d");
-let ball={x:250,y:250,r:10,vx:0,vy:0},goalie={x:250,y:60,w:60,h:10};
-c.addEventListener("click",e=>{
-  const rect=c.getBoundingClientRect();const mx=e.clientX-rect.left,my=e.clientY-rect.top;
-  ball.vx=(mx-ball.x)/20;ball.vy=(my-ball.y)/20;
-});
-function update(){
-  ball.x+=ball.vx;ball.y+=ball.vy;ball.vx*=0.98;ball.vy*=0.98;
-  goalie.x=250+Math.sin(Date.now()/500)*100;
-  if(ball.y<goalie.y+goalie.h&&ball.x>goalie.x-goalie.w/2&&ball.x<goalie.x+goalie.w/2){ball.vx=0;ball.vy=0;}
-  if(ball.y<20){alert("GOAL!");ball={x:250,y:250,r:10,vx:0,vy:0};}
+let ball, goalie, playerScore=0, goalieScore=0;
+
+function resetBall(){
+  ball={x:250,y:250,r:10,vx:0,vy:0,shot:false};
 }
+function resetGoalie(){
+  goalie={x:250,y:60,w:60,h:10,dir:0};
+}
+resetBall(); resetGoalie();
+
+c.addEventListener("click",e=>{
+  if(!ball.shot){
+    const rect=c.getBoundingClientRect();
+    const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+    ball.vx=(mx-ball.x)/20;
+    ball.vy=(my-ball.y)/20;
+    ball.shot=true;
+  }
+});
+
+function update(){
+  // Ball movement
+  if(ball.shot){
+    ball.x+=ball.vx; ball.y+=ball.vy;
+    ball.vx*=0.99; ball.vy*=0.99;
+    if(Math.abs(ball.vx)<0.1 && Math.abs(ball.vy)<0.1){resetBall();}
+  }
+
+  // Goalie AI: track ball with delay
+  if(ball.shot){
+    if(ball.x>goalie.x)goalie.x+=2;
+    else goalie.x-=2;
+  } else {
+    goalie.x=250+Math.sin(Date.now()/600)*100;
+  }
+
+  // Collision: goalie saves
+  if(ball.shot && ball.y<goalie.y+goalie.h && ball.y>goalie.y &&
+     ball.x>goalie.x-goalie.w/2 && ball.x<goalie.x+goalie.w/2){
+    goalieScore++;
+    resetBall();
+  }
+
+  // Goal scored
+  if(ball.shot && ball.y<20){
+    playerScore++;
+    resetBall();
+  }
+}
+
 function draw(){
   ctx.clearRect(0,0,500,300);
-  ctx.fillStyle="white";ctx.fillRect(goalie.x-goalie.w/2,goalie.y,goalie.w,goalie.h);
-  ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);ctx.fillStyle="orange";ctx.fill();
+  // Goal area
+  ctx.strokeStyle="white";ctx.strokeRect(150,10,200,40);
+  // Goalie
+  ctx.fillStyle="white";
+  ctx.fillRect(goalie.x-goalie.w/2,goalie.y,goalie.w,goalie.h);
+  // Ball
+  ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);
+  ctx.fillStyle="orange";ctx.fill();
+  // Score
+  ctx.fillStyle="white";ctx.fillText("Player: "+playerScore+"  Saves: "+goalieScore,20,20);
 }
+
 function loop(){update();draw();requestAnimationFrame(loop);}
 loop();
 </script>
