@@ -4,65 +4,81 @@
 <meta charset="UTF-8">
 <title>Skee Ball</title>
 <style>
-  body { background:#222; display:flex; justify-content:center; align-items:center; height:100vh; }
-  canvas { background:#333; border:6px solid #fff; }
+  body { background:#111; display:flex; justify-content:center; align-items:center; height:100vh; }
+  canvas { background:linear-gradient(to top,#663300,#222); border:6px solid #fff; }
 </style>
 </head>
 <body>
 <canvas id="game" width="400" height="600"></canvas>
 <script>
 const c=document.getElementById("game"),ctx=c.getContext("2d");
-let ball=null,score=0,shots=0;
+let ball=null,score=0,shots=0,particles=[];
 
-// Define scoring rings
+// Scoring rings with colors
 const rings = [
-  {x:200,y:100,r:40,points:10},
-  {x:200,y:80,r:25,points:20},
-  {x:200,y:60,r:15,points:50},
-  {x:200,y:40,r:10,points:100}
+  {x:200,y:100,r:40,points:10,color:"blue"},
+  {x:200,y:80,r:25,points:20,color:"green"},
+  {x:200,y:60,r:15,points:50,color:"purple"},
+  {x:200,y:40,r:10,points:100,color:"gold"}
 ];
 
 c.addEventListener("click",()=>{
-  if(!ball && shots<10){ // 10 shots per round
+  if(!ball && shots<10){
     ball={x:200,y:550,vx:(Math.random()-0.5)*6,vy:-12,r:10};
     shots++;
+  } else if(shots>=10 && !ball){
+    score=0;shots=0;ball=null;
   }
 });
+
+function spawnParticles(x,y,color){
+  for(let i=0;i<20;i++){
+    particles.push({x,y,vx:(Math.random()-0.5)*4,vy:(Math.random()-0.5)*4,life:30,color});
+  }
+}
 
 function update(){
   if(ball){
     ball.x+=ball.vx;
     ball.y+=ball.vy;
-    ball.vy+=0.25; // gravity
+    ball.vy+=0.25;
 
-    // Check scoring rings
     rings.forEach(r=>{
       if(ball && Math.hypot(ball.x-r.x,ball.y-r.y)<r.r){
         score+=r.points;
+        spawnParticles(r.x,r.y,r.color);
         ball=null;
       }
     });
 
-    // Out of bounds
     if(ball && ball.y>600){ball=null;}
   }
+
+  particles.forEach(p=>{
+    p.x+=p.vx;p.y+=p.vy;p.life--;
+  });
+  particles=particles.filter(p=>p.life>0);
 }
 
 function draw(){
   ctx.clearRect(0,0,400,600);
-  ctx.fillStyle="white";
-  ctx.font="16px sans-serif";
-  ctx.fillText("Score: "+score,20,20);
-  ctx.fillText("Shots: "+shots+"/10",300,20);
 
-  // Draw rings
+  // Scoreboard
+  ctx.fillStyle="white";
+  ctx.font="18px monospace";
+  ctx.fillText("Score: "+score,20,30);
+  ctx.fillText("Shots: "+shots+"/10",280,30);
+
+  // Rings
   rings.forEach(r=>{
-    ctx.strokeStyle="yellow";
+    ctx.strokeStyle=r.color;
+    ctx.lineWidth=3;
     ctx.beginPath();
     ctx.arc(r.x,r.y,r.r,0,Math.PI*2);
     ctx.stroke();
-    ctx.fillStyle="white";
-    ctx.fillText(r.points,r.x-10,r.y+5);
+    ctx.fillStyle=r.color;
+    ctx.font="14px monospace";
+    ctx.fillText(r.points,r.x-12,r.y+5);
   });
 
   // Ball
@@ -73,22 +89,22 @@ function draw(){
     ctx.fill();
   }
 
+  // Particles
+  particles.forEach(p=>{
+    ctx.fillStyle=p.color;
+    ctx.fillRect(p.x,p.y,3,3);
+  });
+
   // End of round
   if(shots>=10 && !ball){
     ctx.fillStyle="lime";
-    ctx.font="24px sans-serif";
-    ctx.fillText("Round Over!",140,300);
-    ctx.font="16px sans-serif";
-    ctx.fillText("Final Score: "+score,150,330);
-    ctx.fillText("Click to Restart",150,360);
+    ctx.font="24px monospace";
+    ctx.fillText("ROUND OVER!",120,300);
+    ctx.font="16px monospace";
+    ctx.fillText("Final Score: "+score,140,330);
+    ctx.fillText("Click to Restart",140,360);
   }
 }
-
-c.addEventListener("click",()=>{
-  if(shots>=10 && !ball){
-    score=0;shots=0;ball=null;
-  }
-});
 
 function loop(){update();draw();requestAnimationFrame(loop);}
 loop();
