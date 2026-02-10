@@ -11,26 +11,85 @@
 <body>
 <canvas id="game" width="480" height="320"></canvas>
 <script>
-const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
-let ball={x:240,y:160,vx:3,vy:-3,r:8},paddle={x:200,w:80,h:10},bricks=[];
-for(let r=0;r<5;r++)for(let c=0;c<8;c++)bricks.push({x:60*c+30,y:20*r+30,w:50,h:15,hit:false});
-document.addEventListener("mousemove",e=>{paddle.x=e.clientX-canvas.offsetLeft-paddle.w/2});
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let ball = { x:240, y:160, vx:3, vy:-3, r:8 };
+let paddle = { x:200, w:80, h:10 };
+let bricks = [];
+let score = 0;
+
+function initBricks(){
+  bricks = [];
+  for(let r=0;r<5;r++){
+    for(let c=0;c<8;c++){
+      bricks.push({x:60*c+30,y:20*r+30,w:50,h:15,hit:false});
+    }
+  }
+}
+initBricks();
+
+document.addEventListener("mousemove", e=>{
+  const rect = canvas.getBoundingClientRect();
+  paddle.x = e.clientX - rect.left - paddle.w/2;
+});
+
 function draw(){
   ctx.clearRect(0,0,480,320);
-  ctx.fillStyle="white";ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);ctx.fill();
+  // Ball
+  ctx.fillStyle="white";
+  ctx.beginPath();
+  ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);
+  ctx.fill();
+  // Paddle
   ctx.fillRect(paddle.x,300,paddle.w,paddle.h);
-  ctx.fillStyle="orange";bricks.forEach(b=>{if(!b.hit)ctx.fillRect(b.x,b.y,b.w,b.h)});
+  // Bricks
+  ctx.fillStyle="orange";
+  bricks.forEach(b=>{if(!b.hit)ctx.fillRect(b.x,b.y,b.w,b.h)});
+  // Score
+  ctx.fillStyle="white";
+  ctx.fillText("Score: "+score,10,15);
 }
+
 function update(){
-  ball.x+=ball.vx;ball.y+=ball.vy;
-  if(ball.x<ball.r||ball.x>480-ball.r)ball.vx*=-1;
-  if(ball.y<ball.r)ball.vy*=-1;
-  if(ball.y>320-ball.r)ball={x:240,y:160,vx:3,vy:-3,r:8};
-  if(ball.x>paddle.x&&ball.x<paddle.x+paddle.w&&ball.y+ball.r>300)ball.vy=-Math.abs(ball.vy);
+  ball.x+=ball.vx;
+  ball.y+=ball.vy;
+
+  // Walls
+  if(ball.x<ball.r||ball.x>480-ball.r) ball.vx*=-1;
+  if(ball.y<ball.r) ball.vy*=-1;
+
+  // Bottom (reset ball)
+  if(ball.y>320-ball.r){
+    ball.x=240; ball.y=160; ball.vx=3; ball.vy=-3;
+    score=0; initBricks();
+  }
+
+  // Paddle collision
+  if(ball.x>paddle.x && ball.x<paddle.x+paddle.w && ball.y+ball.r>300){
+    ball.vy=-Math.abs(ball.vy);
+  }
+
+  // Brick collisions
   bricks.forEach(b=>{
-    if(!b.hit&&ball.x>b.x&&ball.x<b.x+b.w&&ball.y>b.y&&ball.y<b.y+b.h){b.hit=true;ball.vy*=-1;}
+    if(!b.hit){
+      if(ball.x+ball.r>b.x && ball.x-ball.r<b.x+b.w &&
+         ball.y+ball.r>b.y && ball.y-ball.r<b.y+b.h){
+        b.hit=true;
+        ball.vy*=-1;
+        score++;
+      }
+    }
   });
+
+  // Win condition
+  if(score===bricks.length){
+    alert("You win!");
+    score=0; initBricks();
+    ball.x=240; ball.y=160; ball.vx=3; ball.vy=-3;
+  }
 }
+
 function loop(){update();draw();requestAnimationFrame(loop);}
 loop();
 </script>
