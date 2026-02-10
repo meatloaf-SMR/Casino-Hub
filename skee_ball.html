@@ -12,57 +12,45 @@
 <canvas id="game" width="400" height="600"></canvas>
 <script>
 const c=document.getElementById("game"),ctx=c.getContext("2d");
-let ball=null,score=0,shots=0,particles=[];
+let ball=null,score=0,shots=0;
 
-// Scoring rings
+// Staggered scoring holes
 const rings = [
-  {x:200,y:100,r:40,points:10,color:"blue"},
-  {x:200,y:80,r:25,points:20,color:"green"},
-  {x:200,y:60,r:15,points:50,color:"purple"},
-  {x:200,y:40,r:10,points:100,color:"gold"}
+  {x:200,y:120,r:40,points:10,color:"blue"},
+  {x:200,y:90,r:30,points:20,color:"green"},
+  {x:200,y:60,r:25,points:30,color:"purple"},
+  {x:200,y:40,r:20,points:50,color:"orange"},
+  {x:100,y:30,r:18,points:100,color:"gold"}, // left corner
+  {x:300,y:30,r:18,points:100,color:"gold"}  // right corner
 ];
 
-// Launch ball toward click
 c.addEventListener("click",e=>{
   if(!ball && shots<10){
     const rect=c.getBoundingClientRect();
     const mx=e.clientX-rect.left;
-    // Aim horizontally toward click
-    const dx=(mx-200)/20;
-    ball={x:200,y:550,vx:dx,vy:-18,r:10}; // stronger upward launch
+    const dx=(mx-200)/20; // aim left/right
+    ball={x:200,y:550,vx:dx,vy:-18,r:10};
     shots++;
   } else if(shots>=10 && !ball){
     score=0;shots=0;ball=null;
   }
 });
 
-function spawnParticles(x,y,color){
-  for(let i=0;i<20;i++){
-    particles.push({x,y,vx:(Math.random()-0.5)*4,vy:(Math.random()-0.5)*4,life:30,color});
-  }
-}
-
 function update(){
   if(ball){
     ball.x+=ball.vx;
     ball.y+=ball.vy;
-    ball.vy+=0.15; // lighter gravity
+    ball.vy+=0.15; // gravity
 
     rings.forEach(r=>{
       if(ball && Math.hypot(ball.x-r.x,ball.y-r.y)<r.r){
         score+=r.points;
-        spawnParticles(r.x,r.y,r.color);
         ball=null;
       }
     });
 
     if(ball && ball.y>600){ball=null;}
   }
-
-  particles.forEach(p=>{
-    p.x+=p.vx;p.y+=p.vy;p.life--;
-  });
-  particles=particles.filter(p=>p.life>0);
 }
 
 function draw(){
@@ -93,12 +81,6 @@ function draw(){
     ctx.fillStyle="red";
     ctx.fill();
   }
-
-  // Particles
-  particles.forEach(p=>{
-    ctx.fillStyle=p.color;
-    ctx.fillRect(p.x,p.y,3,3);
-  });
 
   // End of round
   if(shots>=10 && !ball){
