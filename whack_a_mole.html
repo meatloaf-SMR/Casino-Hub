@@ -12,7 +12,7 @@
 <canvas id="game" width="500" height="400"></canvas>
 <script>
 const c=document.getElementById("game"),ctx=c.getContext("2d");
-let holes=[],moles=[],score=0,misses=0;
+let holes=[],moles=[],score=0,misses=0,gameOver=false;
 
 for(let r=0;r<2;r++){
   for(let c2=0;c2<3;c2++){
@@ -22,42 +22,73 @@ for(let r=0;r<2;r++){
 
 function spawnMole(){
   const hole=holes[Math.floor(Math.random()*holes.length)];
-  moles.push({x:hole.x,y:hole.y,up:true,t:Date.now()});
+  const type=Math.random()<0.1?"gold":"normal"; // 10% chance golden mole
+  moles.push({x:hole.x,y:hole.y,up:true,t:Date.now(),type});
 }
 
 c.addEventListener("click",e=>{
+  if(gameOver){resetGame();return;}
   const rect=c.getBoundingClientRect();
   const mx=e.clientX-rect.left,my=e.clientY-rect.top;
   moles.forEach(m=>{
     if(m.up&&Math.hypot(mx-m.x,my-m.y)<40){
-      m.up=false;score++;
+      m.up=false;
+      score+= m.type==="gold"?5:1; // golden mole worth 5 points
     }
   });
 });
 
 function update(){
+  if(gameOver)return;
   if(Math.random()<0.02)spawnMole();
   moles=moles.filter(m=>{
     if(Date.now()-m.t>1500){
-      if(m.up){misses++;}return false;
+      if(m.up){misses++;}
+      return false;
     }
     return true;
   });
-  if(misses>=5){alert("Game Over! Score:"+score);score=0;misses=0;moles=[];}
+  if(misses>=5){gameOver=true;}
 }
 
 function draw(){
   ctx.clearRect(0,0,500,400);
-  ctx.fillStyle="white";ctx.fillText("Score:"+score+" Misses:"+misses,20,20);
+  ctx.fillStyle="white";
+  ctx.font="16px sans-serif";
+  ctx.fillText("Score:"+score+" Misses:"+misses,20,20);
+
   holes.forEach(h=>{
-    ctx.fillStyle="#222";ctx.beginPath();ctx.arc(h.x,h.y,40,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#222";
+    ctx.beginPath();
+    ctx.arc(h.x,h.y,40,0,Math.PI*2);
+    ctx.fill();
   });
+
   moles.forEach(m=>{
     if(m.up){
-      ctx.fillStyle="brown";ctx.beginPath();ctx.arc(m.x,m.y-20,30,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle="black";ctx.beginPath();ctx.arc(m.x-10,m.y-25,5,0,Math.PI*2);ctx.arc(m.x+10,m.y-25,5,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=m.type==="gold"?"gold":"brown";
+      ctx.beginPath();
+      ctx.arc(m.x,m.y-20,30,0,Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle="black";
+      ctx.beginPath();
+      ctx.arc(m.x-10,m.y-25,5,0,Math.PI*2);
+      ctx.arc(m.x+10,m.y-25,5,0,Math.PI*2);
+      ctx.fill();
     }
   });
+
+  if(gameOver){
+    ctx.fillStyle="yellow";
+    ctx.font="28px sans-serif";
+    ctx.fillText("GAME OVER",160,200);
+    ctx.font="16px sans-serif";
+    ctx.fillText("Click to Restart",170,230);
+  }
+}
+
+function resetGame(){
+  score=0;misses=0;moles=[];gameOver=false;
 }
 
 function loop(){update();draw();requestAnimationFrame(loop);}
