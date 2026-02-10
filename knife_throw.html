@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Knife Throw</title>
+<style>
+  body { background:#222; display:flex; justify-content:center; align-items:center; height:100vh; }
+  canvas { background:#333; border:6px solid #fff; }
+</style>
+</head>
+<body>
+<canvas id="game" width="400" height="400"></canvas>
+<script>
+const c=document.getElementById("game"),ctx=c.getContext("2d");
+let knives=[],targetAngle=0;
+c.addEventListener("click",()=>{knives.push({angle:targetAngle});});
+function update(){targetAngle+=0.02;}
+function draw(){
+  ctx.clearRect(0,0,400,400);
+  ctx.translate(200,200);ctx.rotate(targetAngle);
+  ctx.fillStyle="brown";ctx.beginPath();ctx.arc(0,0,80,0,Math.PI*2);ctx.fill();
+  ctx.resetTransform();
+  ctx.fillStyle="silver";knives.forEach(k=>{
+    const x=200+Math.cos(k.angle)*100,y=200+Math.sin(k.angle)*100;
+    ctx.fillRect(x-2,y-10,
