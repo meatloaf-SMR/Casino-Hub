@@ -12,14 +12,67 @@
 <canvas id="game" width="400" height="400"></canvas>
 <script>
 const c=document.getElementById("game"),ctx=c.getContext("2d");
-let knives=[],targetAngle=0;
-c.addEventListener("click",()=>{knives.push({angle:targetAngle});});
-function update(){targetAngle+=0.02;}
+let knives=[],targetAngle=0,score=0,gameOver=false;
+
+// Throw knife on click
+c.addEventListener("click",()=>{
+  if(!gameOver){
+    knives.push({angle:targetAngle});
+    // Check collision with existing knives (fail if too close)
+    for(let k of knives.slice(0,-1)){
+      if(Math.abs(k.angle-targetAngle)<0.15){ // too close
+        gameOver=true;
+      }
+    }
+    if(!gameOver)score++;
+  } else {
+    // Restart
+    knives=[];score=0;gameOver=false;
+  }
+});
+
+function update(){
+  targetAngle+=0.02; // target spins
+}
+
 function draw(){
   ctx.clearRect(0,0,400,400);
-  ctx.translate(200,200);ctx.rotate(targetAngle);
-  ctx.fillStyle="brown";ctx.beginPath();ctx.arc(0,0,80,0,Math.PI*2);ctx.fill();
-  ctx.resetTransform();
-  ctx.fillStyle="silver";knives.forEach(k=>{
-    const x=200+Math.cos(k.angle)*100,y=200+Math.sin(k.angle)*100;
-    ctx.fillRect(x-2,y-10,
+
+  // Draw target
+  ctx.save();
+  ctx.translate(200,200);
+  ctx.rotate(targetAngle);
+  ctx.fillStyle="brown";
+  ctx.beginPath();
+  ctx.arc(0,0,80,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+
+  // Draw knives
+  ctx.fillStyle="silver";
+  knives.forEach(k=>{
+    const x=200+Math.cos(k.angle)*100;
+    const y=200+Math.sin(k.angle)*100;
+    ctx.fillRect(x-2,y-20,4,20);
+  });
+
+  // Score
+  ctx.fillStyle="white";
+  ctx.font="16px sans-serif";
+  ctx.fillText("Score: "+score,20,20);
+
+  // Game Over
+  if(gameOver){
+    ctx.fillStyle="yellow";
+    ctx.font="24px sans-serif";
+    ctx.fillText("GAME OVER",130,200);
+    ctx.font="14px sans-serif";
+    ctx.fillText("Click to Restart",140,230);
+  }
+}
+
+function loop(){update();draw();requestAnimationFrame(loop);}
+loop();
+</script>
+</body>
+</html>
