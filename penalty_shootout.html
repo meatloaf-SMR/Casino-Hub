@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Penalty Shootout</title>
+<style>
+  body { background:#0b1924; display:flex; justify-content:center; align-items:center; height:100vh; }
+  canvas { background:#0f5b30; border:6px solid #fff; }
+</style>
+</head>
+<body>
+<canvas id="game" width="500" height="300"></canvas>
+<script>
+const c=document.getElementById("game"),ctx=c.getContext("2d");
+let ball={x:250,y:250,r:10,vx:0,vy:0},goalie={x:250,y:60,w:60,h:10};
+c.addEventListener("click",e=>{
+  const rect=c.getBoundingClientRect();const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+  ball.vx=(mx-ball.x)/20;ball.vy=(my-ball.y)/20;
+});
+function update(){
+  ball.x+=ball.vx;ball.y+=ball.vy;ball.vx*=0.98;ball.vy*=0.98;
+  goalie.x=250+Math.sin(Date.now()/500)*100;
+  if(ball.y<goalie.y+goalie.h&&ball.x>goalie.x-goalie.w/2&&ball.x<goalie.x+goalie.w/2){ball.vx=0;ball.vy=0;}
+  if(ball.y<20){alert("GOAL!");ball={x:250,y:250,r:10,vx:0,vy:0};}
+}
+function draw(){
+  ctx.clearRect(0,0,500,300);
+  ctx.fillStyle="white";ctx.fillRect(goalie.x-goalie.w/2,goalie.y,goalie.w,goalie.h);
+  ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);ctx.fillStyle="orange";ctx.fill();
+}
+function loop(){update();draw();requestAnimationFrame(loop);}
+loop();
+</script>
+</body>
+</html>
