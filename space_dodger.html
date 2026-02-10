@@ -12,21 +12,85 @@
 <canvas id="game" width="400" height="600"></canvas>
 <script>
 const c=document.getElementById("game"),ctx=c.getContext("2d");
-let ship={x:200,y:550},asteroids=[],score=0;
-document.addEventListener("mousemove",e=>{ship.x=e.clientX-c.offsetLeft;});
+let ship={x:200,y:550,w:40,h:40},asteroids=[],score=0,lives=3,gameOver=false;
+let stars=[];
+
+// Background stars
+for(let i=0;i<50;i++)stars.push({x:Math.random()*400,y:Math.random()*600});
+
+document.addEventListener("mousemove",e=>{
+  const rect=c.getBoundingClientRect();
+  ship.x=e.clientX-rect.left;
+});
+
+function spawnAsteroid(){
+  asteroids.push({x:Math.random()*400,y:-20,r:15,speed:2+Math.random()*3});
+}
+
 function update(){
-  if(Math.random()<0.03)asteroids.push({x:Math.random()*400,y:0,r:15});
-  asteroids.forEach(a=>a.y+=4);
-  asteroids=asteroids.filter(a=>a.y<600);
-  asteroids.forEach(a=>{if(Math.hypot(ship.x-a.x,ship.y-a.y)<a.r+20){alert("Game Over! Score:"+score);score=0;asteroids=[];}});
+  if(gameOver)return;
+
+  // Stars scroll
+  stars.forEach(s=>{s.y+=2;if(s.y>600){s.y=0;s.x=Math.random()*400;}});
+
+  // Spawn asteroids
+  if(Math.random()<0.02)spawnAsteroid();
+  asteroids.forEach(a=>a.y+=a.speed);
+  asteroids=asteroids.filter(a=>a.y<620);
+
+  // Collision detection
+  asteroids.forEach(a=>{
+    if(Math.abs(ship.x-a.x)<ship.w/2+a.r && Math.abs(ship.y-a.y)<ship.h/2+a.r){
+      lives--;
+      asteroids=[];
+      if(lives<=0){gameOver=true;}
+    }
+  });
+
   score++;
 }
+
 function draw(){
   ctx.clearRect(0,0,400,600);
-  ctx.fillStyle="white";ctx.fillText("Score:"+score,10,20);
-  ctx.fillStyle="cyan";ctx.fillRect(ship.x-20,ship.y-20,40,40);
-  ctx.fillStyle="red";asteroids.forEach(a=>{ctx.beginPath();ctx.arc(a.x,a.y,a.r,0,Math.PI*2);ctx.fill();});
+
+  // Stars
+  ctx.fillStyle="white";
+  stars.forEach(s=>ctx.fillRect(s.x,s.y,2,2));
+
+  // Score & lives
+  ctx.fillStyle="white";
+  ctx.font="16px sans-serif";
+  ctx.fillText("Score: "+score,10,20);
+  ctx.fillText("Lives: "+lives,320,20);
+
+  // Ship
+  ctx.fillStyle="cyan";
+  ctx.fillRect(ship.x-ship.w/2,ship.y-ship.h/2,ship.w,ship.h);
+
+  // Asteroids
+  ctx.fillStyle="red";
+  asteroids.forEach(a=>{
+    ctx.beginPath();
+    ctx.arc(a.x,a.y,a.r,0,Math.PI*2);
+    ctx.fill();
+  });
+
+  // Game Over
+  if(gameOver){
+    ctx.fillStyle="yellow";
+    ctx.font="28px sans-serif";
+    ctx.fillText("GAME OVER",120,300);
+    ctx.font="16px sans-serif";
+    ctx.fillText("Click to Restart",140,330);
+  }
 }
+
+c.addEventListener("click",()=>{
+  if(gameOver){
+    score=0;lives=3;gameOver=false;asteroids=[];
+  }
+});
+
 function loop(){update();draw();requestAnimationFrame(loop);}
 loop();
 </script>
