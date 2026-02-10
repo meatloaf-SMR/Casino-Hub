@@ -13,17 +13,65 @@
 <script>
 const c=document.getElementById("game"),ctx=c.getContext("2d");
 let ball=null,score=0;
-c.addEventListener("click",()=>{ball={x:200,y:550,vx:(Math.random()-0.5)*6,vy:-10};});
+
+// Scoring rings
+const rings = [
+  {x:200,y:100,r:40,points:10},
+  {x:200,y:80,r:25,points:20},
+  {x:200,y:60,r:15,points:50},
+  {x:200,y:40,r:10,points:100}
+];
+
+c.addEventListener("click",()=>{
+  if(!ball){
+    ball={x:200,y:550,vx:(Math.random()-0.5)*6,vy:-12,r:10};
+  }
+});
+
 function update(){
-  if(ball){ball.x+=ball.vx;ball.y+=ball.vy;ball.vy+=0.2;
-    if(ball.y<100){score+=10;ball=null;}}
+  if(ball){
+    ball.x+=ball.vx;
+    ball.y+=ball.vy;
+    ball.vy+=0.25; // gravity
+
+    // Check scoring rings
+    rings.forEach(r=>{
+      if(ball && Math.hypot(ball.x-r.x,ball.y-r.y)<r.r){
+        score+=r.points;
+        ball=null;
+      }
+    });
+
+    // Out of bounds
+    if(ball && ball.y>600){ball=null;}
+  }
 }
+
 function draw(){
   ctx.clearRect(0,0,400,600);
-  ctx.fillStyle="white";ctx.fillText("Score: "+score,20,20);
-  ctx.strokeStyle="yellow";ctx.beginPath();ctx.arc(200,80,40,0,Math.PI*2);ctx.stroke();
-  if(ball){ctx.beginPath();ctx.arc(ball.x,ball.y,10,0,Math.PI*2);ctx.fillStyle="red";ctx.fill();}
+  ctx.fillStyle="white";
+  ctx.font="16px sans-serif";
+  ctx.fillText("Score: "+score,20,20);
+
+  // Draw rings
+  rings.forEach(r=>{
+    ctx.strokeStyle="yellow";
+    ctx.beginPath();
+    ctx.arc(r.x,r.y,r.r,0,Math.PI*2);
+    ctx.stroke();
+    ctx.fillStyle="white";
+    ctx.fillText(r.points,r.x-10,r.y+5);
+  });
+
+  // Ball
+  if(ball){
+    ctx.beginPath();
+    ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);
+    ctx.fillStyle="red";
+    ctx.fill();
+  }
 }
+
 function loop(){update();draw();requestAnimationFrame(loop);}
 loop();
 </script>
