@@ -12,27 +12,30 @@
 <canvas id="game" width="400" height="400"></canvas>
 <script>
 const c=document.getElementById("game"),ctx=c.getContext("2d");
-let knives=[],targetAngle=0,score=0,gameOver=false;
+let knives=[],targetAngle=0,score=0,gameOver=false,speed=0.02;
 
 // Throw knife on click
 c.addEventListener("click",()=>{
   if(!gameOver){
     knives.push({angle:targetAngle});
-    // Check collision with existing knives
+    // Collision check with bigger hitbox
     for(let k of knives.slice(0,-1)){
-      if(Math.abs(k.angle-targetAngle)<0.15){ // too close
+      if(Math.abs(k.angle-targetAngle)<0.25){ // larger hitbox
         gameOver=true;
       }
     }
-    if(!gameOver)score++;
+    if(!gameOver){
+      score++;
+      speed+=0.005; // increase difficulty
+    }
   } else {
     // Restart
-    knives=[];score=0;gameOver=false;
+    knives=[];score=0;gameOver=false;speed=0.02;
   }
 });
 
 function update(){
-  targetAngle+=0.02; // target spins
+  targetAngle+=speed; // target spins faster as score increases
 }
 
 function drawSpiral(){
@@ -55,18 +58,17 @@ function drawSpiral(){
 function draw(){
   ctx.clearRect(0,0,400,400);
 
-  // Draw spiral target
+  // Spiral target
   drawSpiral();
 
-  // Draw knives
-  ctx.fillStyle="silver";
+  // Knives
   knives.forEach(k=>{
     const x=200+Math.cos(k.angle)*100;
     const y=200+Math.sin(k.angle)*100;
-    ctx.fillRect(x-2,y-20,4,20); // blade
-    ctx.fillStyle="brown";
-    ctx.fillRect(x-4,y,8,10); // handle
     ctx.fillStyle="silver";
+    ctx.fillRect(x-3,y-30,6,30); // bigger blade
+    ctx.fillStyle="brown";
+    ctx.fillRect(x-5,y,10,12); // handle
   });
 
   // Score
