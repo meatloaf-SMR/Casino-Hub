@@ -12,9 +12,9 @@
 <canvas id="game" width="400" height="600"></canvas>
 <script>
 const c=document.getElementById("game"),ctx=c.getContext("2d");
-let ball=null,score=0;
+let ball=null,score=0,shots=0;
 
-// Scoring rings
+// Define scoring rings
 const rings = [
   {x:200,y:100,r:40,points:10},
   {x:200,y:80,r:25,points:20},
@@ -23,8 +23,9 @@ const rings = [
 ];
 
 c.addEventListener("click",()=>{
-  if(!ball){
+  if(!ball && shots<10){ // 10 shots per round
     ball={x:200,y:550,vx:(Math.random()-0.5)*6,vy:-12,r:10};
+    shots++;
   }
 });
 
@@ -52,6 +53,7 @@ function draw(){
   ctx.fillStyle="white";
   ctx.font="16px sans-serif";
   ctx.fillText("Score: "+score,20,20);
+  ctx.fillText("Shots: "+shots+"/10",300,20);
 
   // Draw rings
   rings.forEach(r=>{
@@ -70,7 +72,23 @@ function draw(){
     ctx.fillStyle="red";
     ctx.fill();
   }
+
+  // End of round
+  if(shots>=10 && !ball){
+    ctx.fillStyle="lime";
+    ctx.font="24px sans-serif";
+    ctx.fillText("Round Over!",140,300);
+    ctx.font="16px sans-serif";
+    ctx.fillText("Final Score: "+score,150,330);
+    ctx.fillText("Click to Restart",150,360);
+  }
 }
+
+c.addEventListener("click",()=>{
+  if(shots>=10 && !ball){
+    score=0;shots=0;ball=null;
+  }
+});
 
 function loop(){update();draw();requestAnimationFrame(loop);}
 loop();
